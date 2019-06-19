@@ -7,6 +7,10 @@ const app = express();
 var token;
 const SPOTIFY_API_ADDRESS = 'https://api.spotify.com/v1'
 
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
 
 app.use(express.static(path.join(__dirname, 'public')))
 app.set('views', path.join(__dirname, 'views'))

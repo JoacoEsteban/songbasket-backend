@@ -2,31 +2,40 @@ const express = require('express')
 const path = require('path')
 const PORT = process.env.PORT || 5000
 var request = require("request");
+const app = express();
 
 var token;
 const SPOTIFY_API_ADDRESS = 'https://api.spotify.com/v1'
 
 
-express()
-.use(express.static(path.join(__dirname, 'public')))
-.set('views', path.join(__dirname, 'views'))
-.set('view engine', 'ejs')
-.get('/', (req, res) => res.render('pages/index'))
-.get('/artist/:name', (req, res) => 
-{
-  const {name} = req.params;
-  request(
-  {//maskes a spotify API Call with the artist name coming from the get request
-    url:`${SPOTIFY_API_ADDRESS}/search?q=${name}&type=artist&limit=1`,
-    headers: { Authorization: `Bearer ${token}` }
-  }, (error, response, body) => 
-  {
-    if(error) return next(error);
+app.use(express.static(path.join(__dirname, 'public')))
+app.set('views', path.join(__dirname, 'views'))
+app.set('view engine', 'ejs')
+app.listen(PORT, () => console.log(`Listening on ${ PORT }`))
 
-    res.json(JSON.parse(body));
-  })
-})
-.listen(PORT, () => console.log(`Listening on ${ PORT }`))
+app.get('/', (req, res) => res.render('pages/index'))
+
+app.get('/artist/:name', (req, res, next) => 
+{
+  const requestArtist = () => 
+  {
+    const {name} = req.params;
+
+    request(
+    {//maskes a spotify API Call with the artist name coming from the get request
+      url:`${SPOTIFY_API_ADDRESS}/search?q=${name}&type=artist&limit=1`,
+      headers: { Authorization: `Bearer ${token}` }
+    }, (error, response, body) => 
+    {
+      if(error) return next(error);
+
+      res.json(JSON.parse(body));
+    });
+  }
+
+  requestArtist();
+
+});
 
 
 

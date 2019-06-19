@@ -23,7 +23,7 @@ app.get('/artist/:name', (req, res, next) =>
 {
   const requestArtist = () => 
   {
-    const {name} = req.params;
+    const { name } = req.params;
 
     request(
     {//maskes a spotify API Call with the artist name coming from the get request
@@ -38,6 +38,29 @@ app.get('/artist/:name', (req, res, next) =>
   }
 
   requestArtist();
+
+});
+
+
+app.get('/artist/:id/top-tracks', (req, res, next) => 
+{
+  const requestTopTracks = () => 
+  {
+    const { id } = req.params;
+
+    request(
+    {//maskes a spotify API Call with the artist id coming from the get request and responds with the top 10 tracks
+      url:`${SPOTIFY_API_ADDRESS}/artists/${id}/top-tracks?country=US`,
+      headers: { Authorization: `Bearer ${token}` }
+    }, (error, response, body) => 
+    {
+      if(error) return next(error);
+
+      res.json(JSON.parse(body));
+    });
+  }
+
+  requestTopTracks();
 
 });
 

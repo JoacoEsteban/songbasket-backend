@@ -30,22 +30,22 @@ var options =
 };
 
 
-request(options, function (error, response, body) 
-{
-  if (error) throw new Error(error);
-  body = JSON.parse(body)
-  token = body.access_token;
-  console.log(token);
-});
+// request(options, function (error, response, body) 
+// {
+//   if (error) throw new Error(error);
+//   body = JSON.parse(body)
+//   token = body.access_token;
+//   console.log(token);
+// });
 
 
-setInterval(() => {
+// setInterval(() => {
   
-  request(options, function (error, response, body) 
-  {
-    if (error) throw new Error(error);
-    body = JSON.parse(body)
-    token = body.access_token;
-    console.log(token);
-  });
-}, 3600*1000);
+//   request(options, function (error, response, body) 
+//   {
+//     if (error) throw new Error(error);
+//     body = JSON.parse(body)
+//     token = body.access_token;
+//     console.log(token);
+//   });
+// }, 3600*1000);

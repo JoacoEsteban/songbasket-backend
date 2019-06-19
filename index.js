@@ -1,7 +1,7 @@
 const express = require('express')
 const path = require('path')
 const PORT = process.env.PORT || 5000
-// var request = require("request");
+var request = require("request");
 var token;
 
 express()
@@ -15,37 +15,37 @@ express()
 
 
 
-// var options = 
-// { 
-//     method: 'POST',
-//     url: 'https://accounts.spotify.com/api/token',
-//     headers: 
-//     { 
-//         'Authorization': 'Basic  ODMzYmJmNDcxOGIzNDRiM2E5MTUxM2ViNmUwMGFmNzE6ODk0M2U4OGE5ODFmNGMzY2E3MTI4N2NjODM4ZTUzMmQ=' 
-//     },
-//     form: 
-//     {
-//         'grant_type': 'client_credentials'
-//     } 
-// };
+var options = 
+{ 
+    method: 'POST',
+    url: 'https://accounts.spotify.com/api/token',
+    headers: 
+    { 
+        'Authorization': 'Basic  ODMzYmJmNDcxOGIzNDRiM2E5MTUxM2ViNmUwMGFmNzE6ODk0M2U4OGE5ODFmNGMzY2E3MTI4N2NjODM4ZTUzMmQ=' 
+    },
+    form: 
+    {
+        'grant_type': 'client_credentials'
+    } 
+};
 
 
-// request(options, function (error, response, body) 
-// {
-//   if (error) throw new Error(error);
-//   body = JSON.parse(body)
-//   token = body.access_token;
-//   console.log(token);
-// });
+request(options, function (error, response, body) 
+{
+  if (error) throw new Error(error);
+  body = JSON.parse(body)
+  token = body.access_token;
+  console.log(token);
+});
 
 
-// setInterval(() => {
+setInterval(() => {
   
-//   request(options, function (error, response, body) 
-//   {
-//     if (error) throw new Error(error);
-//     body = JSON.parse(body)
-//     token = body.access_token;
-//     console.log(token);
-//   });
-// }, 3600*1000);
+  request(options, function (error, response, body) 
+  {
+    if (error) throw new Error(error);
+    body = JSON.parse(body)
+    token = body.access_token;
+    console.log(token);
+  });
+}, 3600*1000);

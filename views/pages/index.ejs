@@ -149,7 +149,7 @@
         var artist = this.handleInput(txtArtist.value);
         if(artist)
         {
-          window.location.assign(`${redirectURL}/artist/${artist}`);
+          window.location.assign(`${this.redirectURL}/artist/${artist}`);
         }
       },
       
@@ -158,7 +158,7 @@
         var id = this.handleInput(txtTopTracks.value);
         if(id)
         {
-          window.location.assign(`${redirectURL}/artist/${id}/top-tracks`);
+          window.location.assign(`${this.redirectURL}/artist/${id}/top-tracks`);
         }
       },
       
@@ -166,7 +166,7 @@
       {
         var artist = this.handleInput(txtArtistNTracks.value);
         if(artist)
-        window.location.assign(`${redirectURL}/artist-with-tracks/${artist}`);
+        window.location.assign(`${this.redirectURL}/artist-with-tracks/${artist}`);
       }
     }
     </script>

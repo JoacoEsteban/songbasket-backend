@@ -38,12 +38,15 @@ app.get('/artist/:name', (req, res, next) =>
     {
       if(error) return next(error);
 
-      res.json(JSON.parse(body));
+      body = JSON.parse(body);
+      if(body.artists.items.length === 0) return next(error);
+
+      res.json(body);
     });
   }
-
+  
   requestArtist();
-
+  
 });
 
 
@@ -61,39 +64,46 @@ app.get('/artist/:id/top-tracks', (req, res, next) =>
       {
         if(error) return next(error);
         
-        res.json(JSON.parse(body));
+        body = JSON.parse(body);
+        if(body.error !== undefined) return next(error);
+        
+        res.json(body);
       });
-  }
+    }
     
     requestTopTracks();
     
   });
   
   
-app.get('/artist-with-tracks/:name', (req, res, next) =>
-{
-  var object = 
+  app.get('/artist-with-tracks/:name', (req, res, next) =>
   {
-    artist:{},
-    tracks:{}
-  };
-  
-  const { name } = req.params;
+    var object = 
+    {
+      artist:{},
+      tracks:{}
+    };
+    
+    const { name } = req.params;
+    
+    //FETCH ARTIST
+    request(
+      {//maskes a spotify API Call with the artist name coming from the get request
+        url:`${SPOTIFY_API_ADDRESS}/search?q=${name}&type=artist&limit=1`,
+        headers: { Authorization: `Bearer ${token}` }
+      },
+      
+      (error, response, body) => 
+      {
+        if(error) return next(error);
+        
+        body = JSON.parse(body);
+        if(body.artists.items.length === 0) return next(error);
+        
 
-  //FETCH ARTIST
-  request(
-  {//maskes a spotify API Call with the artist name coming from the get request
-    url:`${SPOTIFY_API_ADDRESS}/search?q=${name}&type=artist&limit=1`,
-    headers: { Authorization: `Bearer ${token}` }
-  },
-  
-  (error, response, body) => 
-  {
-    if(error) return next(error);
+        object.artist = body.artists;
     
-    object.artist =JSON.parse(body).artists;
-    
-    const id  = object.artist.items[0].id; //This is used to fetch the top tracks
+        const id  = object.artist.items[0].id; //This is used to fetch the top tracks
     
     //FETCH TOP TRACKS
     request(

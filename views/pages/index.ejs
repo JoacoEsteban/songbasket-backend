@@ -69,39 +69,99 @@
       background: #1AA34A;
       border-color: black;
     }
+
   </style>
 </head>
 
   <body>
     <div>
       <h2>Artist</h2><button id="artist" >GO</button>
-      <h3> <code>/artist/<input placeholder="your-artist" /> </code> to get a JSON response with the artist</h3>
+      <h3> <code>/artist/<input onkeydown="handleKeyPress(event, 0)" id="txtArtist" placeholder="your-artist" /> </code> to get a JSON response with the artist</h3>
     </div>
     <div>
-      <h2>Top Tracks</h2><button id="topTracks" onclick="go()" >GO</button>
-    <h3> <code>/artist/<input placeholder="your-artist-id" />/top-tracks</code> to get a JSON response with the artist Top 10 Tracks</h3>
+      <h2>Top Tracks</h2><button id="topTracks" >GO</button>
+    <h3> <code>/artist/<input onkeydown="handleKeyPress(event, 1)" id="txtTopTracks" placeholder="your-artist-id" />/top-tracks</code> to get a JSON response with the artist Top 10 Tracks</h3>
     </div>
     <div>
-      <h2>Artist & Top Tracks</h2><button id="artistNTracks" onclick="go()" >GO</button>
-      <h3> <code>/artist-with-tracks/<input placeholder="your-artist" />/top-tracks</code> to get a JSON response with <em>BOTH</em> the artist and their Top 10 Tracks</h3>
+      <h2>Artist & Top Tracks</h2><button id="artistNTracks" >GO</button>
+      <h3> <code>/artist-with-tracks/<input onkeydown="handleKeyPress(event, 2)" id="txtArtistNTracks" placeholder="your-artist" />/top-tracks</code> to get a JSON response with <em>BOTH</em> the artist and their Top 10 Tracks</h3>
     </div>
+
+
+
     <script >
-
-
-
-
-
-      var btnArtist = document.getElementById('artist');
-      var btnTopTracks = document.getElementById('topTracks');
-      var btnArtistNTracks = document.getElementById('artistNTracks');
-
-      console.log('btnArtist')
-      btnArtist.addEventListener('click', ()=>{console.log('aqui')});
+    var btnArtist = document.getElementById('artist');
+    var btnTopTracks = document.getElementById('topTracks');
+    var btnArtistNTracks = document.getElementById('artistNTracks');
     
-    
-    
-    
-    
+    var txtArtist= document.getElementById('txtArtist');
+    var txtTopTracks = document.getElementById('txtTopTracks');
+    var txtArtistNTracks = document.getElementById('txtArtistNTracks');
+
+
+
+    const handleKeyPress = (event, mode) =>
+    {
+
+      if(mode === 0)
+      {
+        event.key == 'Enter' ? redirect.Artist() : null;
+      }
+      if(mode === 1)
+      {
+        event.key == 'Enter' ? redirect.Tracks() : null;
+      }
+      if(mode === 2)
+      {
+        event.key == 'Enter' ? redirect.ArtistNTracks() : null;
+      }
+    }
+
+    btnArtist.addEventListener('click', () => redirect.Artist() );
+    btnTopTracks.addEventListener('click', ()=> redirect.Tracks() );
+    btnArtistNTracks.addEventListener('click', ()=> redirect.ArtistNTracks() );
+
+    // txtArtist.onk;
+    txtArtist.addEventListener('onKeyPress', event => console.log('event.target.value'));
+
+
+
+
+
+
+    const redirect =
+    {
+      handleInput: function(input)
+      {
+        input = input.trim();
+        return input !== '' ? input : false;
+      },
+
+        Artist: function()
+      {
+        var artist = this.handleInput(txtArtist.value);
+        if(artist)
+        {
+          window.location.assign(`http://localhost:5000/artist/${artist}`);
+        }
+      },
+      
+      Tracks: function()
+      {
+        var id = this.handleInput(txtTopTracks.value);
+        if(id)
+        {
+          window.location.assign(`http://localhost:5000/artist/${id}/top-tracks`);
+        }
+      },
+      
+      ArtistNTracks: function()
+      {
+        var artist = this.handleInput(txtArtistNTracks.value);
+        if(artist)
+        window.location.assign(`http://localhost:5000/artist-with-tracks/${artist}`);
+      }
+    }
     </script>
   </body>
 

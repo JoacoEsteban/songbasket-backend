@@ -1,39 +1,23 @@
-# node-js-getting-started
+# Spotify API Wrapper
+Simple API Wrapper that removes the need of getting an Authentication Token in order to access the Spotify API.
+There's also an interface if you have to do a quick check.
 
-A barebones Node.js app using [Express 4](http://expressjs.com/).
+All responses are returned in **JSON** Format.
 
-This application supports the [Getting Started with Node on Heroku](https://devcenter.heroku.com/articles/getting-started-with-nodejs) article - check it out.
+## Get an Artist
+`https://spotify-api-wrapper-joaco.herokuapp.com/artist/'your-artist-name'` <br>
+**Example**:
+[spotify-api-wrapper-joaco.herokuapp.com/artist/Boris Brejcha](https://spotify-api-wrapper-joaco.herokuapp.com/artist/Boris%20Brejcha)
 
-## Running Locally
+## Get an Artist's Top 10 Tracks
+`https://spotify-api-wrapper-joaco.herokuapp.com/artist/'your-artist-id'/top-tracks` <br>
+**Example**:
+[spotify-api-wrapper-joaco.herokuapp.com/artist/6caPJFLv1wesmM7gwK1ACy/top-tracks](https://spotify-api-wrapper-joaco.herokuapp.com/artist/6caPJFLv1wesmM7gwK1ACy/top-tracks)
 
-Make sure you have [Node.js](http://nodejs.org/) and the [Heroku CLI](https://cli.heroku.com/) installed.
+## Get **BOTH** an Artist and it's Top 10 Tracks
+`https://spotify-api-wrapper-joaco.herokuapp.com/artist-with-tracks/'your-artist-name'` <br>
+**Example**:
+[spotify-api-wrapper-joaco.herokuapp.com/artist/Boris Brejcha](https://spotify-api-wrapper-joaco.herokuapp.com/artist-with-tracks/Boris%20Brejcha)
 
-```sh
-$ git clone https://github.com/heroku/node-js-getting-started.git # or clone your own fork
-$ cd node-js-getting-started
-$ npm install
-$ npm start
-```
-
-Your app should now be running on [localhost:5000](http://localhost:5000/).
-
-## Deploying to Heroku
-
-```
-$ heroku create
-$ git push heroku master
-$ heroku open
-```
-or
-
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-
-## Documentation
-
-For more information about using Node.js on Heroku, see these Dev Center articles:
-
-- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
-- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
-- [Node.js on Heroku](https://devcenter.heroku.com/categories/nodejs)
-- [Best Practices for Node.js Development](https://devcenter.heroku.com/articles/node-best-practices)
-- [Using WebSockets on Heroku with Node.js](https://devcenter.heroku.com/articles/node-websockets)
+---
+Check it out at [spotify-api-wrapper-joaco.herokuapp.com](https://spotify-api-wrapper-joaco.herokuapp.com/)

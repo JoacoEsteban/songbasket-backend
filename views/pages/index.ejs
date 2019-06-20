@@ -15,7 +15,7 @@
       transition: all 1s;
     }
     div{
-      margin:0;
+      margin:0 0 3em 0;
       padding: 0;
     }
     input{
@@ -29,7 +29,7 @@
       text-align: center;
       
       font-family: lato, monospace;
-      font-size: 1em;
+      font-size: .75em;
     }
     em{
       font-size: 1.5em;
@@ -38,16 +38,17 @@
     
     
     
-    h3{
-      margin: .5em .5em 3em .5em;
-      font-weight: 300;
-    }
     h2{
       color: #1AA34A;
       display: inline-block;
       margin-block-start: 0;
       margin-block-end: 0;
       font-weight: 700;
+      font-size: 3em;
+    }
+    h3{
+      margin: .5em .5em 1em .5em;
+      font-weight: 300;
     }
     
     
@@ -70,21 +71,25 @@
       border-color: black;
     }
 
+    
   </style>
 </head>
 
   <body>
     <div>
-      <h2>Artist</h2><button id="artist" >GO</button>
+      <h2>Artist</h2>
       <h3> <code>/artist/<input onkeydown="handleKeyPress(event, 0)" id="txtArtist" placeholder="your-artist" /> </code> to get a JSON response with the artist</h3>
+      <button id="artist" >GO</button>
     </div>
     <div>
-      <h2>Top Tracks</h2><button id="topTracks" >GO</button>
-    <h3> <code>/artist/<input onkeydown="handleKeyPress(event, 1)" id="txtTopTracks" placeholder="your-artist-id" />/top-tracks</code> to get a JSON response with the artist Top 10 Tracks</h3>
+      <h2>Top Tracks</h2>
+      <h3> <code>/artist/<input onkeydown="handleKeyPress(event, 1)" id="txtTopTracks" placeholder="your-artist-id" />/top-tracks</code> to get a JSON response with the artist Top 10 Tracks</h3>
+      <button id="topTracks" >GO</button>
     </div>
     <div>
-      <h2>Artist & Top Tracks</h2><button id="artistNTracks" >GO</button>
+      <h2>Artist & Top Tracks</h2>
       <h3> <code>/artist-with-tracks/<input onkeydown="handleKeyPress(event, 2)" id="txtArtistNTracks" placeholder="your-artist" />/top-tracks</code> to get a JSON response with <em>BOTH</em> the artist and their Top 10 Tracks</h3>
+      <button id="artistNTracks" >GO</button>
     </div>
 
 

@@ -1,0 +1,8 @@
+{
+    // User
+    "code": "AQB-tNsPhEKcJiZ86szQOHoIyXHTIpcJSiA7OFD0AMbAdjUJVJriZnOsconToTQS0On5kRvjiPw68ZuD10BDcyIL5icWXy8Depjyz7JolCdkfTl0l_kzpkRit0xINngmapNeyvCphujoI7aDsWGZ2_Ev98FdhlgkvcI0DP00S2nV5nQ78X9SXupkBgnnUmuMvaEBcGfyRmCgx-4Ndkfli20Q9ir1iEwBjxsWgYp7wUt8RWnGoTnW5GeyiKCYFZf9hrk26csEsm9-7UjM749CblcYUqWnjztE6cddKBp9QO5i20U",
+    
+    "access_token": "BQDO3Z6ULDYCWTd-0l3IBoimWIF6p-cDPIBaku1Vdu2TkxwLLUQcnebSJH0qQ-W5BBLJdqDgQQgIrY3JRaAzQ-Wzo5FmNfN-5WqZoxQ3fx3cyOGM9q9SUxT335XyPqAj26l-dzx_esQ4aERqPDBO6oo0QjYPvpyP59FcYcCxS3bFfEJK4lM",
+    "refresh_token": "AQDF5jWtMdUAFTImnb1v1pZprK_aokOfgpdrOoCiZzV6kcUDcqNDQX5Z3nWNHvdeLgMhsxzIlOe_u4RhJpyXbNLC5d0b2xNc6JbGym8DUgEGwM4xMPTxLEphtjAn0Rl8ACwvEQ",
+    "scope": "playlist-read-private user-read-email user-read-private"
+}

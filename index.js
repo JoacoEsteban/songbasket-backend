@@ -5,7 +5,8 @@ var request = require("request");
 const app = express();
 
 var token;
-var userToken;
+const refresh_token = 'AQDF5jWtMdUAFTImnb1v1pZprK_aokOfgpdrOoCiZzV6kcUDcqNDQX5Z3nWNHvdeLgMhsxzIlOe_u4RhJpyXbNLC5d0b2xNc6JbGym8DUgEGwM4xMPTxLEphtjAn0Rl8ACwvEQ';
+var access_token = 'BQDkuo9jM02xXHLEgZXyeFgRGDWwzWWwQhwYp05rJQiLALdeRCAYpbndXYfG6UlQ3ljIwFVeCF7nYUxELpjERaQivx6Re0Iwh1e3NWi6fnmi-5jLTAyJbUJ4fOq2nc26uvTLr71U9IvPMD5eXMnab2O5RXTqb9-t0Gye4BIUQCV8W2Tm7fE';
 
 const SPOTIFY_API_ADDRESS = 'https://api.spotify.com/v1'
 
@@ -28,19 +29,47 @@ app.get('/temp-playlists', (req, res, next) =>
 {
   console.log('Buscando Playlists.........')
   const user = 'joaqo.esteban';
-  const access_token = 'BQDO3Z6ULDYCWTd-0l3IBoimWIF6p-cDPIBaku1Vdu2TkxwLLUQcnebSJH0qQ-W5BBLJdqDgQQgIrY3JRaAzQ-Wzo5FmNfN-5WqZoxQ3fx3cyOGM9q9SUxT335XyPqAj26l-dzx_esQ4aERqPDBO6oo0QjYPvpyP59FcYcCxS3bFfEJK4lM'
+  
+  var responseBody;
+  
   request(
-  {
-    url: `https://api.spotify.com/v1/users/${user}/playlists`,
-    headers: {Authorization: `Bearer ${access_token}`}
-  }, (error, response, body) =>
-  {
-    if(error) return next(error);
+    {
+      url: `https://api.spotify.com/v1/users/${user}/playlists`,
+      headers: {Authorization: `Bearer ${access_token}`}
+    }, (error, response, body) =>
+    {
+      if(error) return next(error);
+      
+      responseBody = JSON.parse(body);
+      if(responseBody.error !== undefined)
+      {
+        if(responseBody.error.message == 'The access token expired')
+        {
+          console.log('Getting New Access Token.........')
+          request(
+          {
+            method: 'POST',
+            url: 'https://accounts.spotify.com/api/token',
+            headers:{
+              //SongBasket client_id and secret BASE64 Encoded
+              Authorization: `Basic MzBlM2ViZDI1ZmQwNGFjNWIxZTJkZmU4ODlmZGM5MGM6ZDAxYWRlODBhYjc4NDlhYjk5OWNiMDEyNjU0OTkxZGY=`, 
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            form:{
+              grant_type: 'refresh_token',
+              refresh_token: refresh_token,
+            }
+          },(error, response, body) =>
+          {
+            if(error) return next(error);
 
-    body = JSON.parse(body);
-    // if(body.artists.items.length === 0) return next(error);
-    
-    res.json(body);
+            body = JSON.parse(body);
+            access_token = body.access_token;
+            console.log(access_token);
+          })
+        }
+      }  
+    res.json(responseBody);
   })
 });
 

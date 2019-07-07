@@ -5,6 +5,8 @@ var request = require("request");
 const app = express();
 
 var token;
+var userToken;
+
 const SPOTIFY_API_ADDRESS = 'https://api.spotify.com/v1'
 
 app.use((req, res, next) => {
@@ -22,6 +24,25 @@ app.get('/', (req, res) => res.render('pages/index'))
 var nameGLOB;
 var object;
 
+app.get('/temp-playlists', (req, res, next) =>
+{
+  console.log('Buscando Playlists.........')
+  const user = 'joaqo.esteban';
+  const access_token = 'BQDO3Z6ULDYCWTd-0l3IBoimWIF6p-cDPIBaku1Vdu2TkxwLLUQcnebSJH0qQ-W5BBLJdqDgQQgIrY3JRaAzQ-Wzo5FmNfN-5WqZoxQ3fx3cyOGM9q9SUxT335XyPqAj26l-dzx_esQ4aERqPDBO6oo0QjYPvpyP59FcYcCxS3bFfEJK4lM'
+  request(
+  {
+    url: `https://api.spotify.com/v1/users/${user}/playlists`,
+    headers: {Authorization: `Bearer ${access_token}`}
+  }, (error, response, body) =>
+  {
+    if(error) return next(error);
+
+    body = JSON.parse(body);
+    // if(body.artists.items.length === 0) return next(error);
+    
+    res.json(body);
+  })
+});
 
 
 app.get('/artist/:name', (req, res, next) => 
@@ -31,7 +52,7 @@ app.get('/artist/:name', (req, res, next) =>
     const { name } = req.params;
 
     request(
-    {//maskes a spotify API Call with the artist name coming from the get request
+    {//Makes a spotify API Call with the artist name coming from the get request
       url:`${SPOTIFY_API_ADDRESS}/search?q=${name}&type=artist&limit=1`,
       headers: { Authorization: `Bearer ${token}` }
     }, (error, response, body) => 

@@ -156,7 +156,7 @@ function fetchPlaylists(res, userIndex)
   spotifyApi.setAccessToken(user.access_token);
   spotifyApi.setRefreshToken(user.refresh_token);
 
-  spotifyApi.getMe()
+  spotifyApi.getMe() //IF ACCESS TOKEN WORKS
   .then(function(data) 
   {
 
@@ -170,7 +170,7 @@ function fetchPlaylists(res, userIndex)
       console.log('Something went wrong!', err);
     });
   
-  }, function(err) {
+  }, function(err) { //IF IT'S EXPIRED, REQUEST A NEW ONE AND UPDATE IT IN THE DATABASE
     spotifyApi.refreshAccessToken().then(
       function(data) {
         console.log('The access token has been refreshed!');
@@ -192,9 +192,9 @@ function fetchPlaylists(res, userIndex)
   
 function updateToken(userIndex, token)
 {
+  DATA_BASE[userIndex].access_token = token; //Updates token from database
+  
   // Save the access token so that it's used in future calls
-  DATA_BASE[userIndex].access_token = token;
-
   spotifyApi.setAccessToken(token);
 
 }

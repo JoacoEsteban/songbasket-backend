@@ -140,14 +140,27 @@ app.get('/get_playlists', (req, res) =>
   
   //Get access token from database
   var userData = getUserData(user_id);
-  if(userData = false){ // TODO handle user not being found
+  console.log(userData);
+  if(userData === false){ // TODO handle user not being found
   }
   
-  console.log(userData);
-
-  res.end();
+  fetchPlaylists(res, userData);
+  
 });
 
+function fetchPlaylists(res, userData){
+  spotifyApi.setAccessToken(userData.access_token);
+
+  spotifyApi.getUserPlaylists(userData.user_id)
+  .then(function(data) {
+    console.log('Retrieved playlists', data.body);
+    res.json({user: userData, playlists: data.body});
+  },function(err) {
+    console.log('Something went wrong!', err);
+  });
+
+  // res.end();
+};
 
 
 function getUserData(user_id)

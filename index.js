@@ -95,7 +95,7 @@ app.get('/handle_authorization', (req, res) => {
       user.profile = JSON.parse(body);
       console.log(user.profile);
       
-      res.json(user.profile);
+      res.send(user.profile);
     })
     
     });

@@ -7,6 +7,12 @@ var SpotifyWebApi = require('spotify-web-api-node');
 
 var SPOTIFY_LOGIN_URL = 'https://accounts.spotify.com/authorize?client_id=30e3ebd25fd04ac5b1e2dfe889fdc90c&response_type=code&redirect_uri=http://localhost:5000/handle_authorization/&scope=user-read-private+user-read-email+playlist-read-private';
 
+var DATA_BASE = new Array();
+DATA_BASE.push({
+  user_id: 'joaqo.esteban',
+  access_token: 'BQApAB5Vc9GLcOCjxmwl7S8NtqwLUpJ8WlW1v_A-u_KoMGRBO7osRTAJ68mdRz6uwfwyHvOPw14MAVtE6ooYuBhIPDH3HAEdsILxc9SnbJ4PnRVrtbJeuuncojJGS5mYAyVPegRRyGdllaq5qjwIcqn5KgFJ0yQC023zR4zsugw3Iln-j74',
+  refresh_token: 'AQBntxyfXgAa8U_5BqDi3LoGluqoFAlimavGnTc5ZugbU6YY7ulobJzEbiZxxAhsUwIDzFK1AhklgTmIpc5ts6RzBENmdNMujRII-TnGznM_3RZ0_kWS_-Zh_NUv7mJOCYIIjQ',
+});
 
 var token;
 var refresh_token = 'AQDF5jWtMdUAFTImnb1v1pZprK_aokOfgpdrOoCiZzV6kcUDcqNDQX5Z3nWNHvdeLgMhsxzIlOe_u4RhJpyXbNLC5d0b2xNc6JbGym8DUgEGwM4xMPTxLEphtjAn0Rl8ACwvEQ';
@@ -18,7 +24,7 @@ const CLIENT_SECRET = 'd01ade80ab7849ab999cb012654991df';
 var spotifyApi = new SpotifyWebApi({
   clientId: '30e3ebd25fd04ac5b1e2dfe889fdc90c',
   clientSecret: 'd01ade80ab7849ab999cb012654991df',
-  redirectUri: 'https://spotify-api-wrapper-joaco.herokuapp.com/'
+  redirectUri: 'http://localhost:5000/handle_authorization'
 });
 
 spotifyApi.setAccessToken('<your_access_token>');
@@ -46,7 +52,7 @@ app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 app.listen(PORT, () => console.log(`Listening on ${ PORT }`))
 
-//Redirect to Login URL
+//USER NOT REGISTERED Redirect to Login URL
 app.get('/init', (req, res) => res.redirect(301, SPOTIFY_LOGIN_URL));
 
 
@@ -117,6 +123,7 @@ app.get('/login_success', (req, res) =>
     display_name: USER_PROFILE.display_name,
     country: USER_PROFILE.country,
     email: USER_PROFILE.email,
+    user_id: USER_PROFILE.id,
   });
   res.render('pages/success')
   // res.send();
@@ -126,9 +133,35 @@ app.get('/login_success', (req, res) =>
 
 
 
+app.get('/get_playlists', (req, res) => 
+{
+  var user_id = req.query.user_id; 
+  console.log(user_id);
+  
+  //Get access token from database
+  var userData = getUserData(user_id);
+  if(userData = false){ // TODO handle user not being found
+  }
+  
+  console.log(userData);
+
+  res.end();
+});
 
 
 
+function getUserData(user_id)
+{
+  for(let i = 0; i < DATA_BASE.length; i++)
+  {
+    if(DATA_BASE[i].user_id === user_id)
+    {
+      return DATA_BASE[i];
+    }
+  }
+
+  return false;
+}
 
 
 

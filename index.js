@@ -26,7 +26,7 @@ spotifyApi.setAccessToken('<your_access_token>');
 
 
 
-
+var USER_PROFILE;
 
 
 
@@ -95,7 +95,11 @@ app.get('/handle_authorization', (req, res) => {
       user.profile = JSON.parse(body);
       console.log(user.profile);
       
-      res.send(user.profile);
+      USER_PROFILE = user.profile;
+
+      res.redirect(301, 'http://localhost:5000/login_success');
+
+      // res.send(user.profile);
     })
     
     });
@@ -106,6 +110,17 @@ app.get('/handle_authorization', (req, res) => {
 })
 
 
+app.get('/login_success', (req, res) =>
+{
+
+  res.set({
+    display_name: USER_PROFILE.display_name,
+    country: USER_PROFILE.country,
+    email: USER_PROFILE.email,
+  });
+  res.render('pages/success')
+  // res.send();
+})
 
 
 

@@ -139,41 +139,83 @@ app.get('/get_playlists', (req, res) =>
   console.log(user_id);
   
   //Get access token from database
-  var userData = getUserData(user_id);
-  console.log(userData);
-  if(userData === false){ // TODO handle user not being found
+  var userIndex = getUserIndex(user_id);
+  console.log(DATA_BASE[userIndex]);
+  if(userIndex === false){ // TODO handle user not being found
   }
   
-  fetchPlaylists(res, userData);
+  fetchPlaylists(res, userIndex);
   
 });
 
-function fetchPlaylists(res, userData){
-  spotifyApi.setAccessToken(userData.access_token);
-
-  spotifyApi.getUserPlaylists(userData.user_id)
-  .then(function(data) {
-    console.log('Retrieved playlists', data.body);
-    res.json({user: userData, playlists: data.body});
-  },function(err) {
-    console.log('Something went wrong!', err);
-  });
-
-  // res.end();
-};
 
 
-function getUserData(user_id)
+function fetchPlaylists(res, userIndex)
+{
+  user = DATA_BASE[userIndex]
+  spotifyApi.setAccessToken(user.access_token);
+  spotifyApi.setRefreshToken(user.refresh_token);
+
+  spotifyApi.getMe()
+  .then(function(data) 
+  {
+
+    spotifyApi.getUserPlaylists(user.user_id)  
+    .then(function(data)
+    {
+      console.log('Retrieved playlists', data.body);
+      res.json({user: user, playlists: data.body});
+    },function(err) 
+    {
+      console.log('Something went wrong!', err);
+    });
+  
+  }, function(err) {
+    spotifyApi.refreshAccessToken().then(
+      function(data) {
+        console.log('The access token has been refreshed!');
+        
+
+        updateToken(userIndex, data.body['access_token']);
+        
+        fetchPlaylists(res, userIndex)
+      },
+      function(err) {
+        console.log('Could not refresh access token', err);
+      }
+      );
+    });
+    
+    
+    
+  };
+  
+function updateToken(userIndex, token)
+{
+  // Save the access token so that it's used in future calls
+  DATA_BASE[userIndex].access_token = token;
+
+  spotifyApi.setAccessToken(token);
+
+}
+
+function getUserIndex(user_id)
 {
   for(let i = 0; i < DATA_BASE.length; i++)
   {
     if(DATA_BASE[i].user_id === user_id)
     {
-      return DATA_BASE[i];
+      return i;
     }
   }
 
   return false;
+}
+
+
+async function checkAccessToken( access_token )
+{
+  
 }
 
 

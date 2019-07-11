@@ -57,6 +57,7 @@ app.get('/handle_authorization', (req, res) => {
     },
     function(err) {
       console.log('Something went wrong!', err);
+      res.redirect(301, 'http://localhost:5000/fail')
     })
     .then(()=>{
       //Gets New User's ID to push to DB 
@@ -75,26 +76,22 @@ app.get('/handle_authorization', (req, res) => {
         });
 
         res.send()
-
-      
       });
 
     });
 
   }else{
-    res.render('pages/access_denied', {url: SPOTIFY_LOGIN_URL})
+    res.redirect(301, 'http://localhost:5000/fail')
   }
-
-
+  
+  
   // res.render('pages/success')
 })
 
 
-app.get('/login_success', (req, res) =>
+app.get('/fail', (req, res) =>
 {
-
-  res.render('pages/success')
-  // res.send();
+  res.render('pages/access_denied', {url: SPOTIFY_LOGIN_URL})
 })
 
 

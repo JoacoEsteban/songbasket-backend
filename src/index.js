@@ -104,24 +104,31 @@ app.get('/get_playlists', (req, res) =>
   console.log('USER_ID:::', user_id);
   
   //Get access token from database
-  var userIndex = getUserIndex(user_id);
-  console.log('USER:::', DATA_BASE[userIndex]);
-  if(userIndex === false){ // TODO handle user not being found
-  }
   
-  fetchPlaylists(res, userIndex);
+  fetchPlaylists(res, user_id);
   
 });
 
 
 
-function fetchPlaylists(res, userIndex)
+function fetchPlaylists(res, user_id)
 {
-  user = DATA_BASE[userIndex]
+  user = DB.getUserFromId(user_id); //Gets user from DB
+
+  if(user === undefined){ //if user isn't in database return
+    res.set({
+      success: false,
+      reason: 'user not logged in',
+      user_id: user_id,
+    });
+    res.send();
+  }
+
+
   spotifyApi.setAccessToken(user.access_token);
   spotifyApi.setRefreshToken(user.refresh_token);
 
-  spotifyApi.getMe() //IF ACCESS TOKEN WORKS
+  spotifyApi.getMe() //IF ACCESS TOKEN WORKS (also gets user info to respond to frontend)
   .then(function(user_data) 
   {
     user_data = user_data.body;
@@ -140,11 +147,12 @@ function fetchPlaylists(res, userIndex)
     spotifyApi.refreshAccessToken().then(
       function(data) {
         console.log('The access token has been refreshed!');
-        
+        DB.updateToken(user_id, data.body['access_token']);
 
-        updateToken(userIndex, data.body['access_token']);
+        // Save the access token so that it's used in future calls
+        spotifyApi.setAccessToken(token);
         
-        fetchPlaylists(res, userIndex)
+        fetchPlaylists(res, user_id)
       },
       function(err) {
         console.log('Could not refresh access token', err);
@@ -156,14 +164,7 @@ function fetchPlaylists(res, userIndex)
     
   };
   
-function updateToken(userIndex, token)
-{
-  DATA_BASE[userIndex].access_token = token; //Updates token from database
-  
-  // Save the access token so that it's used in future calls
-  spotifyApi.setAccessToken(token);
 
-}
 
 function getUserIndex(user_id)
 {

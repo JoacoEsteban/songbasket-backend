@@ -36,6 +36,25 @@ exports.DB = {
         // Save the access token so that it's used in future calls
         spotifyApi.setAccessToken(token);
 
+    },
+
+    getUserFromId(user_id)
+    {
+        index = this.getUserIndex(user_id);
+        return index === -1 ? null : DATA_BASE[index];
+    },
+
+    updateToken(user_id, token)
+    {
+        var userIndex = this.getUserIndex(user_id);
+        
+        if(userIndex === -1 )
+        {
+
+        }else{
+            DATA_BASE[userIndex].access_token = token; //Updates token from database
+
+        }
     }
 
 }

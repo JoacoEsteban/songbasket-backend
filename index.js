@@ -3,44 +3,20 @@ const path = require('path')
 const PORT = process.env.PORT || 5000
 var request = require("request");
 const app = express();
-var SpotifyWebApi = require('spotify-web-api-node');
+const SpotifyWebApi = require('spotify-web-api-node');
 
-var SPOTIFY_LOGIN_URL = 'https://accounts.spotify.com/authorize?client_id=30e3ebd25fd04ac5b1e2dfe889fdc90c&response_type=code&redirect_uri=http://localhost:5000/handle_authorization/&scope=user-read-private+user-read-email+playlist-read-private';
+var {CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, REDIRECT_URI} = require('./CONNECTION_DATA');
+const {logme} = require('./logme')
 
 var DATA_BASE = new Array();
-DATA_BASE.push({
-  user_id: 'joaqo.esteban',
-  access_token: 'BQApAB5Vc9GLcOCjxmwl7S8NtqwLUpJ8WlW1v_A-u_KoMGRBO7osRTAJ68mdRz6uwfwyHvOPw14MAVtE6ooYuBhIPDH3HAEdsILxc9SnbJ4PnRVrtbJeuuncojJGS5mYAyVPegRRyGdllaq5qjwIcqn5KgFJ0yQC023zR4zsugw3Iln-j74',
-  refresh_token: 'AQBntxyfXgAa8U_5BqDi3LoGluqoFAlimavGnTc5ZugbU6YY7ulobJzEbiZxxAhsUwIDzFK1AhklgTmIpc5ts6RzBENmdNMujRII-TnGznM_3RZ0_kWS_-Zh_NUv7mJOCYIIjQ',
-});
-
-var token;
-var refresh_token = 'AQDF5jWtMdUAFTImnb1v1pZprK_aokOfgpdrOoCiZzV6kcUDcqNDQX5Z3nWNHvdeLgMhsxzIlOe_u4RhJpyXbNLC5d0b2xNc6JbGym8DUgEGwM4xMPTxLEphtjAn0Rl8ACwvEQ';
-var access_token = 'BQDkuo9jM02xXHLEgZXyeFgRGDWwzWWwQhwYp05rJQiLALdeRCAYpbndXYfG6UlQ3ljIwFVeCF7nYUxELpjERaQivx6Re0Iwh1e3NWi6fnmi-5jLTAyJbUJ4fOq2nc26uvTLr71U9IvPMD5eXMnab2O5RXTqb9-t0Gye4BIUQCV8W2Tm7fE';
-
-const CLIENT_ID = '30e3ebd25fd04ac5b1e2dfe889fdc90c';
-const CLIENT_SECRET = 'd01ade80ab7849ab999cb012654991df';
 
 var spotifyApi = new SpotifyWebApi({
-  clientId: '30e3ebd25fd04ac5b1e2dfe889fdc90c',
-  clientSecret: 'd01ade80ab7849ab999cb012654991df',
-  redirectUri: 'http://localhost:5000/handle_authorization'
+  clientId: CLIENT_ID,
+  clientSecret: CLIENT_SECRET,
+  redirectUri: REDIRECT_URI
 });
 
-spotifyApi.setAccessToken('<your_access_token>');
-
-
-
-
 var USER_PROFILE;
-
-
-
-
-
-
-
-
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');

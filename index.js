@@ -98,10 +98,13 @@ app.get('/handle_authorization', (req, res) => {
       headers:{Authorization: `Bearer ${user.access_token}`},
     }, (error, response, body) =>{
       if(error) throw new Error(error);
-      user.profile = JSON.parse(body);
-      console.log(user.profile);
+      USER_PROFILE = JSON.parse(body);
+      console.log(USER_PROFILE);
+      user.user_id = USER_PROFILE.id;
+
+      DATA_BASE.push(user);
+      console.log('DATABASE-UPDATE: ', DATA_BASE)
       
-      USER_PROFILE = user.profile;
 
       res.redirect(301, 'http://localhost:5000/login_success');
 
@@ -136,11 +139,11 @@ app.get('/login_success', (req, res) =>
 app.get('/get_playlists', (req, res) => 
 {
   var user_id = req.query.user_id; 
-  console.log(user_id);
+  console.log('USER_ID:::', user_id);
   
   //Get access token from database
   var userIndex = getUserIndex(user_id);
-  console.log(DATA_BASE[userIndex]);
+  console.log('USER:::', DATA_BASE[userIndex]);
   if(userIndex === false){ // TODO handle user not being found
   }
   
@@ -157,14 +160,15 @@ function fetchPlaylists(res, userIndex)
   spotifyApi.setRefreshToken(user.refresh_token);
 
   spotifyApi.getMe() //IF ACCESS TOKEN WORKS
-  .then(function(data) 
+  .then(function(user_data) 
   {
-
+    user_data = user_data.body;
+    
     spotifyApi.getUserPlaylists(user.user_id)  
     .then(function(data)
     {
       console.log('Retrieved playlists', data.body);
-      res.json({user: user, playlists: data.body});
+      res.json({user: user_data, playlists: data.body});
     },function(err) 
     {
       console.log('Something went wrong!', err);

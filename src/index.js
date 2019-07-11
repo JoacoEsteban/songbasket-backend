@@ -6,9 +6,9 @@ const app = express();
 const SpotifyWebApi = require('spotify-web-api-node');
 
 var {CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, REDIRECT_URI} = require('./CONNECTION_DATA');
+const {DB} = require('./DB')
 const {logme} = require('./logme')
 
-var DATA_BASE = new Array();
 
 var spotifyApi = new SpotifyWebApi({
   clientId: CLIENT_ID,
@@ -34,60 +34,134 @@ app.get('/init', (req, res) => res.redirect(301, SPOTIFY_LOGIN_URL));
 
 //Arrives with Authorization Code
 app.get('/handle_authorization', (req, res) => {
-  var user = {};
+  var newUser = {}; //will store newUser data
   var authorizationCode = req.query.code;
-  console.log('Code: ', authorizationCode);
+  // logme(`Authorization Code: ${authorizationCode}`);
 
-  if(authorizationCode !== undefined)
+  if(authorizationCode !== undefined) //TODO actually handle rejection from newUser
   {
     //Get Access Token and Refresh Token
-    var options = 
-    { 
-      method: 'POST',
-      url: 'https://accounts.spotify.com/api/token',
+    spotifyApi.authorizationCodeGrant(authorizationCode)
+    .then(function(data) {
+      // console.log('The token expires in ' + data.body['expires_in']);
+      // console.log('The access token is ' + data.body['access_token']);
+      // console.log('The refresh token is ' + data.body['refresh_token']);
+  
+      //Updates user to be pushed to database
+      newUser.access_token = data.body['access_token'];
+      newUser.refresh_token = data.body['refresh_token'];
       
-      form: 
-      { 
-        grant_type: 'authorization_code',
-        code: authorizationCode,
-        redirect_uri: 'http://localhost:5000/handle_authorization/',
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-      } 
-    };
-
-    request(options, function (error, response, body) {
-    if (error) throw new Error(error);
-
-    body = JSON.parse(body);
-    console.log(body);
-
-    access_token = body.access_token;
-    refresh_token = body.refresh_token;
-    
-    user.access_token = access_token;
-    user.refresh_token = refresh_token;
-    
-    //Gets User data
-    request({
-      url: 'https://api.spotify.com/v1/me',
-      headers:{Authorization: `Bearer ${user.access_token}`},
-    }, (error, response, body) =>{
-      if(error) throw new Error(error);
-      USER_PROFILE = JSON.parse(body);
-      console.log(USER_PROFILE);
-      user.user_id = USER_PROFILE.id;
-
-      DATA_BASE.push(user);
-      console.log('DATABASE-UPDATE: ', DATA_BASE)
-      
-
-      res.redirect(301, 'http://localhost:5000/login_success');
-
-      // res.send(user.profile);
+      // Set the access token on the API object to use it in later calls
+      spotifyApi.setAccessToken(newUser.access_token);
+      spotifyApi.setRefreshToken(newUser.refresh_token);
+    },
+    function(err) {
+      console.log('Something went wrong!', err);
     })
-    
+    .then(()=>{
+      //Gets New User's ID to push to DB 
+      spotifyApi.getMe()
+      .then(function(newUserData)
+      {
+        newUserData = newUserData.body;
+        newUser.user_id = newUserData.id;
+        
+        DB.publish(newUser); //Update database with New User
+        
+        res.set({
+          display_name: newUserData.display_name,
+          user_id: newUserData.id,
+          success: true,
+        });
+
+        res.send()
+
+      
+      });
+
     });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // //Get Access Token and Refresh Token
+    // var options = 
+    // { 
+    //   method: 'POST',
+    //   url: 'https://accounts.spotify.com/api/token',
+      
+    //   form: 
+    //   { 
+    //     grant_type: 'authorization_code',
+    //     code: authorizationCode,
+    //     redirect_uri: 'http://localhost:5000/handle_authorization/',
+    //     client_id: CLIENT_ID,
+    //     client_secret: CLIENT_SECRET,
+    //   } 
+    // };
+
+    // request(options, function (error, response, body) {
+    // if (error) throw new Error(error);
+
+    // body = JSON.parse(body);
+    // console.log(body);
+
+    // access_token = body.access_token;
+    // refresh_token = body.refresh_token;
+    
+    // user.access_token = access_token;
+    // user.refresh_token = refresh_token;
+    
+    // //Gets User data
+    // request({
+    //   url: 'https://api.spotify.com/v1/me',
+    //   headers:{Authorization: `Bearer ${user.access_token}`},
+    // }, (error, response, body) =>{
+    //   if(error) throw new Error(error);
+    //   USER_PROFILE = JSON.parse(body);
+    //   console.log(USER_PROFILE);
+    //   user.user_id = USER_PROFILE.id;
+
+    //   DATA_BASE.push(user);
+    //   console.log('DATABASE-UPDATE: ', DATA_BASE)
+      
+
+    //   res.redirect(301, 'http://localhost:5000/login_success');
+
+    //   // res.send(user.profile);
+    // })
+    
+    // });
   }
 
 
@@ -98,12 +172,6 @@ app.get('/handle_authorization', (req, res) => {
 app.get('/login_success', (req, res) =>
 {
 
-  res.set({
-    display_name: USER_PROFILE.display_name,
-    country: USER_PROFILE.country,
-    email: USER_PROFILE.email,
-    user_id: USER_PROFILE.id,
-  });
   res.render('pages/success')
   // res.send();
 })

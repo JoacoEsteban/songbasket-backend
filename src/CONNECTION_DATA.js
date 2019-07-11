@@ -7,8 +7,9 @@ const CLIENT_SECRET = 'd01ade80ab7849ab999cb012654991df';
 const REDIRECT_URI = `${Backend}/handle_authorization/`
 const SCOPES = 'user-read-private+user-read-email+playlist-read-private'
 const SHOW_DIALOG = 'true';
+const STATE = '*SONGBASKET*';
 
-exports.SPOTIFY_LOGIN_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&scope=${SCOPES}&show_dialog=${SHOW_DIALOG}`
+exports.SPOTIFY_LOGIN_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&scope=${SCOPES}&show_dialog=${SHOW_DIALOG}&state=${STATE}`
 
 exports.CLIENT_ID = CLIENT_ID;
 exports.CLIENT_SECRET = CLIENT_SECRET;

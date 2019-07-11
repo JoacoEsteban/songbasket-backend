@@ -34,9 +34,9 @@ app.get('/init', (req, res) => res.redirect(301, SPOTIFY_LOGIN_URL));
 
 //Arrives with Authorization Code
 app.get('/handle_authorization', (req, res) => {
-  var newUser = {}; //will store newUser data
+  var newUser = {}; //will store newUser data and then publish it to DB
   var authorizationCode = req.query.code;
-  // logme(`Authorization Code: ${authorizationCode}`);
+  logme(`Authorization Code: ${authorizationCode}`);
 
   if(authorizationCode !== undefined) //TODO actually handle rejection from newUser
   {
@@ -81,87 +81,8 @@ app.get('/handle_authorization', (req, res) => {
 
     });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // //Get Access Token and Refresh Token
-    // var options = 
-    // { 
-    //   method: 'POST',
-    //   url: 'https://accounts.spotify.com/api/token',
-      
-    //   form: 
-    //   { 
-    //     grant_type: 'authorization_code',
-    //     code: authorizationCode,
-    //     redirect_uri: 'http://localhost:5000/handle_authorization/',
-    //     client_id: CLIENT_ID,
-    //     client_secret: CLIENT_SECRET,
-    //   } 
-    // };
-
-    // request(options, function (error, response, body) {
-    // if (error) throw new Error(error);
-
-    // body = JSON.parse(body);
-    // console.log(body);
-
-    // access_token = body.access_token;
-    // refresh_token = body.refresh_token;
-    
-    // user.access_token = access_token;
-    // user.refresh_token = refresh_token;
-    
-    // //Gets User data
-    // request({
-    //   url: 'https://api.spotify.com/v1/me',
-    //   headers:{Authorization: `Bearer ${user.access_token}`},
-    // }, (error, response, body) =>{
-    //   if(error) throw new Error(error);
-    //   USER_PROFILE = JSON.parse(body);
-    //   console.log(USER_PROFILE);
-    //   user.user_id = USER_PROFILE.id;
-
-    //   DATA_BASE.push(user);
-    //   console.log('DATABASE-UPDATE: ', DATA_BASE)
-      
-
-    //   res.redirect(301, 'http://localhost:5000/login_success');
-
-    //   // res.send(user.profile);
-    // })
-    
-    // });
+  }else{
+    res.render('pages/access_denied', {url: SPOTIFY_LOGIN_URL})
   }
 
 

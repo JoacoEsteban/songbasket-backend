@@ -4,6 +4,7 @@ const PORT = process.env.PORT || 5000
 var request = require("request");
 const app = express();
 const SpotifyWebApi = require('spotify-web-api-node');
+const uuid = require('uuid/v4');
 
 var {CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, REDIRECT_URI} = require('./CONNECTION_DATA');
 const {DB} = require('./DB')
@@ -16,7 +17,17 @@ var spotifyApi = new SpotifyWebApi({
   redirectUri: REDIRECT_URI
 });
 
-var USER_PROFILE;
+//CLIENT CREDENTIALS To for Guest Users
+var spotifyApiCC = new SpotifyWebApi({
+  clientId: CLIENT_ID,
+  clientSecret: CLIENT_SECRET,
+});
+
+CCGrant(); //Gets Client Credentials Token and sets Interval
+setInterval(() => {
+  CCGrant();
+}, 3600*1000);
+
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -43,9 +54,9 @@ app.get('/handle_authorization', (req, res) => {
     //Get Access Token and Refresh Token
     spotifyApi.authorizationCodeGrant(authorizationCode)
     .then(function(data) {
-      // console.log('The token expires in ' + data.body['expires_in']);
-      // console.log('The access token is ' + data.body['access_token']);
-      // console.log('The refresh token is ' + data.body['refresh_token']);
+      console.log('The token expires in ' + data.body['expires_in']);
+      console.log('The access token is ' + data.body['access_token']);
+      console.log('The refresh token is ' + data.body['refresh_token']);
   
       //Updates user to be pushed to database
       newUser.access_token = data.body['access_token'];
@@ -56,7 +67,7 @@ app.get('/handle_authorization', (req, res) => {
       spotifyApi.setRefreshToken(newUser.refresh_token);
     },
     function(err) {
-      console.log('Something went wrong!', err);
+      console.log('SOMETHING WENT WRONG!', err);
       res.redirect(301, 'http://localhost:5000/fail')
     })
     .then(()=>{
@@ -66,12 +77,13 @@ app.get('/handle_authorization', (req, res) => {
       {
         newUserData = newUserData.body;
         newUser.user_id = newUserData.id;
+        newUser.SBID = uuid(); //SONGBASKET Unique ID for Authentication
         
         DB.publish(newUser); //Update database with New User
         
         res.set({
-          display_name: newUserData.display_name,
-          user_id: newUserData.id,
+          user_id: newUser.user_id,
+          SBID: newUser.SBID,
           success: true,
         });
 
@@ -81,11 +93,9 @@ app.get('/handle_authorization', (req, res) => {
     });
 
   }else{
+    logme('AQI TAMOS')
     res.redirect(301, 'http://localhost:5000/fail')
   }
-  
-  
-  // res.render('pages/success')
 })
 
 
@@ -100,69 +110,92 @@ app.get('/fail', (req, res) =>
 
 app.get('/get_playlists', (req, res) => 
 {
-  var user_id = req.query.user_id; 
-  console.log('USER_ID:::', user_id);
+  var user_id = req.query.user_id;
+  var logged = req.query.logged; //wheter it's a SB logged user
+  var SBID = req.query.SBID; //SB User ID
+  console.log('USER_ID:::', user_id, 'SB_ID:::', SBID);
   
-  //Get access token from database
-  
-  fetchPlaylists(res, user_id);
+  if(logged == 'true')
+  {
+    fetchPlaylists(res, user_id, true, SBID);
+  }
+  if(logged == 'false')
+  {
+    fetchPlaylists(res, user_id, false);
+  }
   
 });
 
 
 
-function fetchPlaylists(res, user_id)
+function fetchPlaylists(res, user_id, logged, SBID)
 {
-  user = DB.getUserFromId(user_id); //Gets user from DB
-
-  if(user === undefined){ //if user isn't in database return
-    res.set({
-      success: false,
-      reason: 'user not logged in',
-      user_id: user_id,
-    });
-    res.send();
-  }
-
-
-  spotifyApi.setAccessToken(user.access_token);
-  spotifyApi.setRefreshToken(user.refresh_token);
-
-  spotifyApi.getMe() //IF ACCESS TOKEN WORKS (also gets user info to respond to frontend)
-  .then(function(user_data) 
+  if(logged)
   {
-    user_data = user_data.body;
     
-    spotifyApi.getUserPlaylists(user.user_id)  
+    user = DB.getUserFromSBID(SBID); //Gets user from DB
+
+    if(user === null){ //if user isn't in database return
+      res.set({
+        success: false,
+        reason: 'user not logged in',
+        user_id: user_id,
+      });
+      res.send();
+    }
+
+
+    spotifyApi.setAccessToken(user.access_token);
+    spotifyApi.setRefreshToken(user.refresh_token);
+
+    spotifyApi.getMe() //IF ACCESS TOKEN WORKS (also gets user info to respond to frontend)
+    .then(function(user_data) 
+    {
+      user_data = user_data.body;
+      user_data.SBID = SBID;
+
+      spotifyApi.getUserPlaylists(user.user_id)  
+      .then(function(data)
+      {
+        console.log('Retrieved playlists', data.body);
+        res.json({user: user_data, playlists: data.body});
+      },function(err) 
+      {
+        console.log('Something went wrong!', err);
+      });
+    
+    }, function(err) { //IF IT'S EXPIRED, REQUEST A NEW ONE AND UPDATE IT IN THE DATABASE
+      spotifyApi.refreshAccessToken().then(
+        function(data) {
+          console.log('The access token has been refreshed!');
+          DB.updateToken(user_id, data.body['access_token']);
+
+          // Save the access token so that it's used in future calls
+          spotifyApi.setAccessToken(token);
+          
+          fetchPlaylists(res, user_id, true, SBID)
+        },
+        function(err) {
+          console.log('Could not refresh access token', err);
+        }
+        );
+      });
+      
+  }else //Guest fetching playlists
+  {
+    spotifyApiCC.getUserPlaylists(user.user_id)  
     .then(function(data)
     {
       console.log('Retrieved playlists', data.body);
       res.json({user: user_data, playlists: data.body});
-    },function(err) 
+    },function(err)
     {
       console.log('Something went wrong!', err);
     });
-  
-  }, function(err) { //IF IT'S EXPIRED, REQUEST A NEW ONE AND UPDATE IT IN THE DATABASE
-    spotifyApi.refreshAccessToken().then(
-      function(data) {
-        console.log('The access token has been refreshed!');
-        DB.updateToken(user_id, data.body['access_token']);
 
-        // Save the access token so that it's used in future calls
-        spotifyApi.setAccessToken(token);
-        
-        fetchPlaylists(res, user_id)
-      },
-      function(err) {
-        console.log('Could not refresh access token', err);
-      }
-      );
-    });
-    
-    
-    
-  };
+  }    
+      
+};
   
 
 
@@ -180,11 +213,6 @@ function getUserIndex(user_id)
 }
 
 
-async function checkAccessToken( access_token )
-{
-  
-}
-
 
 
 
@@ -195,8 +223,6 @@ async function checkAccessToken( access_token )
 
 app.get('/', (req, res) => res.render('pages/success'));
 
-var nameGLOB;
-var object;
 
 
 
@@ -209,57 +235,18 @@ var object;
 
 
 
-
-
-
-
-
-
-
-app.get('/temp-playlists', (req, res, next) =>
+function CCGrant()
 {
-  console.log('Buscando Playlists.........')
-  const user = 'joaqo.esteban';
-  
-  var responseBody;
-  
-  request(
-    {
-      url: `https://api.spotify.com/v1/users/${user}/playlists`,
-      headers: {Authorization: `Bearer ${access_token}`}
-    }, (error, response, body) =>
-    {
-      if(error) return next(error);
+  spotifyApiCC.clientCredentialsGrant().then(
+    function(data) {
+      console.log('The access token expires in ' + data.body['expires_in']);
+      console.log('The access token is ' + data.body['access_token']);
       
-      responseBody = JSON.parse(body);
-      if(responseBody.error !== undefined)
-      {
-        if(responseBody.error.message == 'The access token expired')
-        {
-          console.log('Getting New Access Token.........')
-          request(
-          {
-            method: 'POST',
-            url: 'https://accounts.spotify.com/api/token',
-            headers:{
-              //SongBasket client_id and secret BASE64 Encoded
-              Authorization: `Basic MzBlM2ViZDI1ZmQwNGFjNWIxZTJkZmU4ODlmZGM5MGM6ZDAxYWRlODBhYjc4NDlhYjk5OWNiMDEyNjU0OTkxZGY=`, 
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            form:{
-              grant_type: 'refresh_token',
-              refresh_token: refresh_token,
-            }
-          },(error, response, body) =>
-          {
-            if(error) return next(error);
-
-            body = JSON.parse(body);
-            access_token = body.access_token;
-            console.log(access_token);
-          })
-        }
-      }  
-    res.json(responseBody);
-  })
-});
+      // Save the access token so that it's used in future calls
+      spotifyApi.setAccessToken(data.body['access_token']);
+    },
+    function(err) {
+      console.log('Something went wrong when retrieving an access token', err);
+    }
+    );
+}

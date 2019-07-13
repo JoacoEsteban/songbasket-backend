@@ -1,22 +1,23 @@
 var DATA_BASE = new Array();
 
+function getUserIndex(SBID)
+{
+    for(let i = 0; i < DATA_BASE.length; i++)
+    {
+        if(DATA_BASE[i].SBID === SBID)
+        {
+            return i;
+        }
+    }
+    return -1; //Not Found
+}
+
 exports.DB = {
 
-    getUserIndex(user_id)
-    {
-        for(let i = 0; i < DATA_BASE.length; i++)
-        {
-            if(DATA_BASE[i].user_id === user_id)
-            {
-                return i;
-            }
-        }
-        return -1; //Not Found
-    },
 
     publish(newUser)
     {
-        var userIndex = this.getUserIndex(newUser.user_id);
+        var userIndex = getUserIndex(newUser.user_id);
 
         if(userIndex === -1) //If user isn't in the DB
         {
@@ -29,24 +30,15 @@ exports.DB = {
         }
     },
 
-    updateToken(userIndex, token)
+    getUserFromSBID(SBID)
     {
-        DATA_BASE[userIndex].access_token = token; //Updates token from database
-        
-        // Save the access token so that it's used in future calls
-        spotifyApi.setAccessToken(token);
-
-    },
-
-    getUserFromId(user_id)
-    {
-        index = this.getUserIndex(user_id);
+        index = getUserIndex(SBID);
         return index === -1 ? null : DATA_BASE[index];
     },
 
     updateToken(user_id, token)
     {
-        var userIndex = this.getUserIndex(user_id);
+        var userIndex = getUserIndex(user_id);
         
         if(userIndex === -1 )
         {

@@ -22,6 +22,7 @@ var spotifyApiCC = new SpotifyWebApi({
   clientId: CLIENT_ID,
   clientSecret: CLIENT_SECRET,
 });
+var CCTOKEN;
 
 CCGrant(); //Gets Client Credentials Token and sets Interval
 setInterval(() => {
@@ -159,6 +160,7 @@ function fetchPlaylists(res, user_id, logged, SBID)
       {
         console.log('Retrieved playlists', data.body);
         res.json({user: user_data, playlists: data.body});
+
       },function(err) 
       {
         console.log('Something went wrong!', err);
@@ -183,15 +185,35 @@ function fetchPlaylists(res, user_id, logged, SBID)
       
   }else //Guest fetching playlists
   {
-    spotifyApiCC.getUserPlaylists(user.user_id)  
-    .then(function(data)
+    request(`https://api.spotify.com/v1/users/${user_id}`, { headers:{ Authorization: 'Bearer ' + CCTOKEN } }, 
+    (algo, response) =>
     {
-      console.log('Retrieved playlists', data.body);
-      res.json({user: user_data, playlists: data.body});
-    },function(err)
-    {
-      console.log('Something went wrong!', err);
-    });
+      response = JSON.parse(response.body);
+      if(response.error !== undefined) //User Not Found
+      {
+        res.set({
+          code: 404,
+          success: true,
+          reason: 'user not found',
+          user_id: user_id,
+        });
+        res.send();
+      }
+      else{
+        var guestUser = response; //User Profile Data
+
+        //Get Playlists
+        request(`https://api.spotify.com/v1/users/${user_id}/playlists`, { headers:{ Authorization: 'Bearer ' + CCTOKEN } },
+        (algo, playlists) =>
+        {
+          playlists = JSON.parse(playlists.body);
+          res.json({user: guestUser, playlists: playlists});
+          
+        })
+        
+      }
+    })
+
 
   }    
       
@@ -239,6 +261,7 @@ function CCGrant()
 {
   spotifyApiCC.clientCredentialsGrant().then(
     function(data) {
+      CCTOKEN = data.body['access_token'];
       console.log('The access token expires in ' + data.body['expires_in']);
       console.log('The access token is ' + data.body['access_token']);
       

@@ -6,7 +6,7 @@ const app = express();
 const SpotifyWebApi = require('spotify-web-api-node');
 const uuid = require('uuid/v4');
 
-var {CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, REDIRECT_URI} = require('./CONNECTION_DATA');
+var {CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, BACKEND, REDIRECT_URI} = require('./CONNECTION_DATA');
 const {DB} = require('./DB')
 const {logme} = require('./logme')
 
@@ -24,10 +24,7 @@ var spotifyApiCC = new SpotifyWebApi({
 });
 var CCTOKEN;
 
-CCGrant(); //Gets Client Credentials Token and sets Interval
-setInterval(() => {
-  CCGrant();
-}, 3600*1000);
+CCGrant(); //Gets Client Credentials Token and sets a timeout
 
 
 app.use((req, res, next) => {
@@ -69,7 +66,7 @@ app.get('/handle_authorization', (req, res) => {
     },
     function(err) {
       console.log('SOMETHING WENT WRONG!', err);
-      res.redirect(301, 'http://localhost:5000/fail')
+      res.redirect(301, `${BACKEND}/fail`)
     })
     .then(()=>{
       //Gets New User's ID to push to DB 
@@ -94,8 +91,7 @@ app.get('/handle_authorization', (req, res) => {
     });
 
   }else{
-    logme('AQI TAMOS')
-    res.redirect(301, 'http://localhost:5000/fail')
+    res.redirect(301, `${BACKEND}/fail`)
   }
 })
 
@@ -111,18 +107,45 @@ app.get('/fail', (req, res) =>
 
 app.get('/get_playlists', (req, res) => 
 {
-  var user_id = req.query.user_id;
-  var logged = req.query.logged; //wheter it's a SB logged user
-  var SBID = req.query.SBID; //SB User ID
+  var user_id = req.query.user_id.trim();
+  var logged = req.query.logged.trim(); //wheter it's a SB logged user
+  var SBID = req.query.SBID.trim(); //SB User ID
   console.log('USER_ID:::', user_id, 'SB_ID:::', SBID);
   
-  if(logged == 'true')
+  if(user_id !== '')
   {
-    fetchPlaylists(res, user_id, true, SBID);
-  }
-  if(logged == 'false')
+    
+    if(logged == 'true')
+    {
+    
+      if(SBID !== undefined)
+      {
+        fetchPlaylists(res, user_id, true, SBID);
+      }else
+      {
+        console.log("400 / reason: SongBasket ID (SBID) missing")
+        res.status(400)
+        res.set({
+          reason: 'SongBasket ID (SBID) missing'
+        })
+        res.send();
+      }
+      
+    }
+    
+    if(logged == 'false')
+    {
+      fetchPlaylists(res, user_id, false);
+    }
+    
+  }else
   {
-    fetchPlaylists(res, user_id, false);
+    console.log("400 / reason: User ID missing")
+    res.status(400)
+    res.set({
+      reason: 'User ID missing'
+    })
+    res.send()
   }
   
 });
@@ -191,7 +214,7 @@ function fetchPlaylists(res, user_id, logged, SBID)
       response = JSON.parse(response.body);
       if(response.error !== undefined) //User Not Found
       {
-        res.set({
+        res.json({
           code: 404,
           success: true,
           reason: 'user not found',
@@ -207,6 +230,7 @@ function fetchPlaylists(res, user_id, logged, SBID)
         (algo, playlists) =>
         {
           playlists = JSON.parse(playlists.body);
+          logme(playlists);
           res.json({user: guestUser, playlists: playlists});
           
         })
@@ -256,20 +280,30 @@ app.get('/', (req, res) => res.render('pages/success'));
 
 
 
-
 function CCGrant()
 {
+  logme('RETRIEVING CC ACCESS TOKEN::::::::::')
   spotifyApiCC.clientCredentialsGrant().then(
     function(data) {
+      logme('SUCCESS::::::::::')
       CCTOKEN = data.body['access_token'];
       console.log('The access token expires in ' + data.body['expires_in']);
       console.log('The access token is ' + data.body['access_token']);
       
       // Save the access token so that it's used in future calls
       spotifyApi.setAccessToken(data.body['access_token']);
+
+      setTimeout(() => {
+        CCGrant();
+      }, 3600*1000);
+
     },
     function(err) {
-      console.log('Something went wrong when retrieving an access token', err);
+      console.log('Something went wrong when retrieving an access token, Trying again in 10 seconds', err);
+      
+      setTimeout(() => {
+        CCGrant();
+      }, 10*1000);
     }
     );
 }

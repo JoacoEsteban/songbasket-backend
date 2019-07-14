@@ -10,6 +10,7 @@ const SHOW_DIALOG = 'true';
 const STATE = '*SONGBASKET*';
 
 exports.SPOTIFY_LOGIN_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&scope=${SCOPES}&show_dialog=${SHOW_DIALOG}&state=${STATE}`
+exports.BACKEND = Backend;
 
 exports.CLIENT_ID = CLIENT_ID;
 exports.CLIENT_SECRET = CLIENT_SECRET;

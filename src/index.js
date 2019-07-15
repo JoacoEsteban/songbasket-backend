@@ -190,19 +190,8 @@ function fetchPlaylists(res, {user_id, logged, SBID, limit, offset})
       user_data.SBID = SBID;
       user_data.logged = logged;
 
-
-
-
-      request(`https://api.spotify.com/v1/users/${user.user_id}/playlists?limit=${limit}&offset=${offset}`, { headers:{ Authorization: 'Bearer ' + user.access_token } },
-      (algo, playlists) =>
-      {
-        playlists = JSON.parse(playlists.body);
-        logme(playlists);
-        res.json({user: user_data, playlists: playlists});
-        
-      })
-
-    
+      // Get Playlists
+      plMakeRequest(user.user_id, limit, offset, user.access_token, (playlists)=> res.json({user: user_data, playlists: playlists}) )
     },
      function(err) 
     { //IF IT'S EXPIRED, REQUEST A NEW ONE AND UPDATE IT IN THE DATABASE
@@ -244,15 +233,8 @@ function fetchPlaylists(res, {user_id, logged, SBID, limit, offset})
 
 
         //Get Playlists
-        request(`https://api.spotify.com/v1/users/${user_id}/playlists?limit=${limit}&offset=${offset}`, { headers:{ Authorization: 'Bearer ' + CCTOKEN } },
-        (algo, playlists) =>
-        {
-          playlists = JSON.parse(playlists.body);
-          logme(playlists);
-          res.json({user: guestUser, playlists: playlists});
-          
-        })
-        
+        plMakeRequest(user_id, limit, offset, CCTOKEN, (playlists)=> res.json({user: guestUser, playlists: playlists}) )
+
       }
     })
 
@@ -261,7 +243,48 @@ function fetchPlaylists(res, {user_id, logged, SBID, limit, offset})
       
 };
 
+async function plMakeRequestTEMP(user_id, limit, offset, token, callback)
+{
+  let res = await request(`https://api.spotify.com/v1/users/${user_id}/playlists?limit=${limit}&offset=${offset}`, { headers:{ Authorization: 'Bearer ' + token } },
+  (algo, playlists) => 
+  {
+    playlists = JSON.parse(playlists.body)
+    var index = 0;
 
+    console.log('getting tracks: ', playlists)
+
+    plMakeRequestTracks({playlists, index, token, callback})
+  })
+}
+
+
+async function plMakeRequest(user_id, limit, offset, token, callback)
+{
+  let res = await request(`https://api.spotify.com/v1/users/${user_id}/playlists?limit=${limit}&offset=${offset}`, { headers:{ Authorization: 'Bearer ' + token } },
+  (algo, playlists) => callback(JSON.parse(playlists.body)) )
+}
+
+
+
+
+async function plMakeRequestTracks({playlists, index, token, callback})
+{
+  if(index < playlists.items.length)
+  {
+    let res = await request(`https://api.spotify.com/v1/playlists/${playlists.items[index].id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track)&offset=${0}`, { headers:{ Authorization: 'Bearer ' + token } },
+    (algo, tracks) =>
+    {
+      tracks = JSON.parse(tracks.body);
+      playlists.items[index].tracks.items = tracks.items;
+
+      index++;
+      
+      plMakeRequestTracks({playlists, index, token, callback})
+    })
+  }else{
+    callback(playlists);
+  }
+}
 
 
 

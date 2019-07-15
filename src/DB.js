@@ -90,17 +90,14 @@ exports.DB = {
 
 
 
-    updateToken(user_id, token)
+    updateToken(SBID, token)
     {
-        var userIndex = getUserIndex(user_id);
+        var userIndex = getUserIndexFromSBID(SBID);
         
-        if(userIndex === -1 )
+        if(userIndex === -1 ) //TODO Handle missing user
         {
 
-        }else{
-            DATA_BASE[userIndex].access_token = token; //Updates token from database
-
-        }
+        }else DATA_BASE[userIndex].access_token = token; //Updates token from database
     }
 
 }

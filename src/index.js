@@ -104,54 +104,61 @@ app.get('/fail', (req, res) =>
 
 
 
-app.get('/get_playlists', (req, res) => 
+app.get('/get_playlists', (req, res) => //TODO Changeit into post
 {
-  var user_id = req.query.user_id.trim();
-  var logged = req.query.logged.trim(); //wheter it's a SB logged user
-  var SBID = req.query.SBID.trim(); //SB User ID
-  console.log('USER_ID:::', user_id, 'SB_ID:::', SBID);
+  var requestParams = 
+  {
+    user_id: req.query.user_id.trim() === '' ? false : req.query.user_id.trim() ,
+    logged: req.query.logged.trim() == 'false' ? false : req.query.logged.trim() == 'true' ? true : 'invalid', //wheter it's a SB logged user
+    SBID: req.query.SBID.trim() === '' ? false : req.query.SBID.trim() , //SB User ID
+    limit: parseInt(req.query.limit.trim()),
+    offset: parseInt(req.query.offset.trim()),
+  }
+
+  console.log(requestParams);
   
-  if(user_id !== '')
+  //Request Validation
+
+  var isValid = true;
+  var reason = '';
+  
+  if(requestParams.user_id === false)
   {
-    
-    if(logged == 'true')
-    {
-    
-      if(SBID !== undefined)
-      {
-        fetchPlaylists(res, user_id, true, SBID);
-      }else
-      {
-        console.log("400 / reason: SongBasket ID (SBID) missing")
-        res.status(400)
-        res.set({
-          reason: 'SongBasket ID (SBID) missing'
-        })
-        res.send();
-      }
-      
-    }
-    
-    if(logged == 'false')
-    {
-      fetchPlaylists(res, user_id, false);
-    }
-    
-  }else
-  {
-    console.log("400 / reason: User ID missing")
-    res.status(400)
-    res.set({
-      reason: 'User ID missing'
-    })
-    res.send()
+    isValid = false;
+    reason += 'User ID missing. ';
   }
   
+  if(requestParams.logged === 'invalid')
+  {
+    isValid = false;
+    reason += 'Logged parameter not provided. ';
+  }
+  
+  if(requestParams.SBID === false)
+  {
+    isValid = false;
+    reason += 'SongBasket ID (SBID) missing.';
+  }
+  
+  if(!isValid)
+  {
+    res.status(400);
+    res.set({
+      reason
+    })
+    res.send();
+  }
+
+  fetchPlaylists(res, requestParams);
 });
 
 
 
-function fetchPlaylists(res, user_id, logged, SBID)
+
+
+
+
+function fetchPlaylists(res, {user_id, logged, SBID, limit, offset})
 {
   if(logged)
   {
@@ -162,8 +169,12 @@ function fetchPlaylists(res, user_id, logged, SBID)
       res.set({
         success: false,
         reason: 'user not logged in',
-        user_id: user_id,
-        SBID: SBID,
+
+        user_id,
+        logged,
+        SBID,
+        limit,
+        offset,
       });
       res.send();
     }
@@ -177,34 +188,38 @@ function fetchPlaylists(res, user_id, logged, SBID)
     {
       user_data = user_data.body;
       user_data.SBID = SBID;
+      user_data.logged = logged;
 
-      spotifyApi.getUserPlaylists(user.user_id)  
-      .then(function(data)
-      {
-        console.log('Retrieved playlists', data.body);
-        res.json({user: user_data, playlists: data.body});
 
-      },function(err) 
+
+
+      request(`https://api.spotify.com/v1/users/${user.user_id}/playlists?limit=${limit}&offset=${offset}`, { headers:{ Authorization: 'Bearer ' + user.access_token } },
+      (algo, playlists) =>
       {
-        console.log('Something went wrong!', err);
-      });
+        playlists = JSON.parse(playlists.body);
+        logme(playlists);
+        res.json({user: user_data, playlists: playlists});
+        
+      })
+
     
-    }, function(err) { //IF IT'S EXPIRED, REQUEST A NEW ONE AND UPDATE IT IN THE DATABASE
+    },
+     function(err) 
+    { //IF IT'S EXPIRED, REQUEST A NEW ONE AND UPDATE IT IN THE DATABASE
       spotifyApi.refreshAccessToken().then(
         function(data) {
           console.log('The access token has been refreshed!');
-          DB.updateToken(user_id, data.body['access_token']);
 
-          // Save the access token so that it's used in future calls
+          DB.updateToken(user_id, data.body['access_token']);
           spotifyApi.setAccessToken(token);
           
-          fetchPlaylists(res, user_id, true, SBID)
+          fetchPlaylists(res, {user_id, logged, SBID, limit, offset})
         },
         function(err) {
           console.log('Could not refresh access token', err);
         }
-        );
-      });
+      );
+    });
       
   }else //Guest fetching playlists
   {
@@ -224,9 +239,12 @@ function fetchPlaylists(res, user_id, logged, SBID)
       }
       else{
         var guestUser = response; //User Profile Data
+        guestUser.logged = logged; //false
+        guestUser.SBID = null;
+
 
         //Get Playlists
-        request(`https://api.spotify.com/v1/users/${user_id}/playlists`, { headers:{ Authorization: 'Bearer ' + CCTOKEN } },
+        request(`https://api.spotify.com/v1/users/${user_id}/playlists?limit=${limit}&offset=${offset}`, { headers:{ Authorization: 'Bearer ' + CCTOKEN } },
         (algo, playlists) =>
         {
           playlists = JSON.parse(playlists.body);

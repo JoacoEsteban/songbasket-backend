@@ -47,7 +47,7 @@ app.get('/handle_authorization', (req, res) => {
   var authorizationCode = req.query.code;
   logme(`Authorization Code: ${authorizationCode}`);
 
-  if(authorizationCode !== undefined) //TODO actually handle rejection from newUser
+  if(authorizationCode !== undefined)
   {
     //Get Access Token and Refresh Token
     spotifyApi.authorizationCodeGrant(authorizationCode)
@@ -65,7 +65,7 @@ app.get('/handle_authorization', (req, res) => {
       spotifyApi.setRefreshToken(newUser.refresh_token);
     },
     function(err) {
-      console.log('SOMETHING WENT WRONG!', err);
+      console.log('SOMETHING WENT WRONG! When retrieving User Access Tokens', err);
       res.redirect(301, `${BACKEND}/fail`)
     })
     .then(()=>{
@@ -75,10 +75,9 @@ app.get('/handle_authorization', (req, res) => {
       {
         newUserData = newUserData.body;
         newUser.user_id = newUserData.id;
-        newUser.SBID = uuid(); //SONGBASKET Unique ID for Authentication
-        
-        DB.publish(newUser); //Update database with New User
-        
+
+        newUser.SBID = DB.publish(newUser); //Update database with New User. The SBID Is Returned from inside the function
+
         res.set({
           user_id: newUser.user_id,
           SBID: newUser.SBID,
@@ -164,6 +163,7 @@ function fetchPlaylists(res, user_id, logged, SBID)
         success: false,
         reason: 'user not logged in',
         user_id: user_id,
+        SBID: SBID,
       });
       res.send();
     }
@@ -242,37 +242,6 @@ function fetchPlaylists(res, user_id, logged, SBID)
   }    
       
 };
-  
-
-
-function getUserIndex(user_id)
-{
-  for(let i = 0; i < DATA_BASE.length; i++)
-  {
-    if(DATA_BASE[i].user_id === user_id)
-    {
-      return i;
-    }
-  }
-
-  return false;
-}
-
-
-
-
-
-
-
-
-
-
-app.get('/', (req, res) => res.render('pages/success'));
-
-
-
-
-
 
 
 

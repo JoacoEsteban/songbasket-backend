@@ -104,15 +104,21 @@ app.get('/fail', (req, res) =>
 
 
 
-app.get('/get_playlists', (req, res) => //TODO Changeit into post
+app.get('/retrieve', (req, res) => //TODO Changeit into post
 {
   var requestParams = 
   {
     user_id: req.query.user_id.trim() === '' ? false : req.query.user_id.trim() ,
     logged: req.query.logged.trim() == 'false' ? false : req.query.logged.trim() == 'true' ? true : 'invalid', //wheter it's a SB logged user
-    SBID: req.query.SBID.trim() === '' ? false : req.query.SBID.trim() , //SB User ID
+    SBID: req.query.SBID.trim() === 'null' ? null : req.query.SBID.trim() , //SB User ID
     limit: parseInt(req.query.limit.trim()),
     offset: parseInt(req.query.offset.trim()),
+
+    //user playlists or playlist tracks
+    retrieve: req.query.retrieve.trim(),
+
+    //in case of retrieving playlist tracks:
+    playlist_id: req.query.playlist_id !== undefined ? req.query.playlist_id.trim() : null,
   }
 
   console.log(requestParams);
@@ -134,7 +140,7 @@ app.get('/get_playlists', (req, res) => //TODO Changeit into post
     reason += 'Logged parameter not provided. ';
   }
   
-  if(requestParams.SBID === false)
+  if(requestParams.logged ===true && requestParams.SBID === false)
   {
     isValid = false;
     reason += 'SongBasket ID (SBID) missing.';
@@ -149,7 +155,17 @@ app.get('/get_playlists', (req, res) => //TODO Changeit into post
     res.send();
   }
 
-  fetchPlaylists(res, requestParams);
+  switch(requestParams.retrieve)
+  {
+    case 'playlists':
+      fetchPlaylists(res, requestParams);
+      break;
+      
+    case 'playlist_tracks':
+      plMakeRequestTracks(playlist_id, { token, callback })
+
+
+  }
 });
 
 
@@ -267,10 +283,8 @@ async function plMakeRequest(user_id, limit, offset, token, callback)
 
 
 
-async function plMakeRequestTracks({playlists, index, token, callback})
+async function plMakeRequestTracks(playlist_id, { token, callback })
 {
-  if(index < playlists.items.length)
-  {
     let res = await request(`https://api.spotify.com/v1/playlists/${playlists.items[index].id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track)&offset=${0}`, { headers:{ Authorization: 'Bearer ' + token } },
     (algo, tracks) =>
     {
@@ -279,11 +293,8 @@ async function plMakeRequestTracks({playlists, index, token, callback})
 
       index++;
       
-      plMakeRequestTracks({playlists, index, token, callback})
+      callback(playlists);
     })
-  }else{
-    callback(playlists);
-  }
 }
 
 

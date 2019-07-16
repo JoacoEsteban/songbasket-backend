@@ -59,6 +59,7 @@ app.get('/handle_authorization', (req, res) => {
       //Updates user to be pushed to database
       newUser.access_token = data.body['access_token'];
       newUser.refresh_token = data.body['refresh_token'];
+      newUser.token_created_at = Date.now();
       
       // Set the access token on the API object to use it in later calls
       spotifyApi.setAccessToken(newUser.access_token);
@@ -133,18 +134,18 @@ app.get('/retrieve', (req, res) => //TODO Changeit into post
     isValid = false;
     reason += 'User ID missing. ';
   }
-  
   if(requestParams.logged === 'invalid')
   {
     isValid = false;
     reason += 'Logged parameter not provided. ';
   }
-  
   if(requestParams.logged ===true && requestParams.SBID === false)
   {
     isValid = false;
     reason += 'SongBasket ID (SBID) missing.';
   }
+
+
   
   if(!isValid)
   {
@@ -155,6 +156,61 @@ app.get('/retrieve', (req, res) => //TODO Changeit into post
     res.send();
   }
 
+
+
+  var loggedToken;
+  if(requestParams.logged)
+  {
+    //authenticate
+
+    user = DB.getUserFromSBID(SBID); //Gets user from DB
+
+    if(user === null){ //if user isn't in database return
+      res.set({
+        success: false,
+        reason: 'user not logged in',
+
+        requestParams,
+      });
+      res.send();
+    }
+
+    spotifyApi.setAccessToken(user.access_token);
+    spotifyApi.setRefreshToken(user.refresh_token);
+
+    loggedToken = user.access_token;
+
+    if( !(Date.now() - user.token_created_at < 3600*1000) )
+    {
+
+      //Retrieve NEW Access Token
+      spotifyApi.refreshAccessToken().then(
+        function(data) {
+          console.log('The access token has been refreshed!');
+          
+          loggedToken = data.body['access_token'];
+
+          DB.updateToken(SBID, loggedToken);
+          spotifyApi.setAccessToken(loggedToken);
+          
+          retrieveRedirect(res, requestParams, loggedToken )
+        },
+        function(err) {
+          console.log('Could not refresh access token', err);
+        }
+      );
+    } else retrieveRedirect(res, requestParams, loggedToken)
+
+  }
+
+  retrieveRedirect(res, requestParams, CCTOKEN);
+  
+  
+});
+
+
+function retrieveRedirect(res, requestParams, token) //TOKEN Used only on guests, else using API Wrapper
+{
   switch(requestParams.retrieve)
   {
     case 'playlists':
@@ -162,13 +218,10 @@ app.get('/retrieve', (req, res) => //TODO Changeit into post
       break;
       
     case 'playlist_tracks':
-      plMakeRequestTracks(playlist_id, { token, callback })
-
-
+      plMakeRequestTracks({ playlist_id: requestParams.playlist_id, token, callback: (playlist_id, tracks)=> res.json({playlist_id, tracks}) })
+      break;
   }
-});
-
-
+}
 
 
 
@@ -283,17 +336,14 @@ async function plMakeRequest(user_id, limit, offset, token, callback)
 
 
 
-async function plMakeRequestTracks(playlist_id, { token, callback })
+async function plMakeRequestTracks({ playlist_id, token, callback })
 {
-    let res = await request(`https://api.spotify.com/v1/playlists/${playlists.items[index].id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track)&offset=${0}`, { headers:{ Authorization: 'Bearer ' + token } },
+    let res = await request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track)&offset=${0}`, { headers:{ Authorization: 'Bearer ' + token } },
     (algo, tracks) =>
     {
-      tracks = JSON.parse(tracks.body);
-      playlists.items[index].tracks.items = tracks.items;
-
-      index++;
-      
-      callback(playlists);
+      tracks = JSON.parse(tracks.body).items;
+      console.log(tracks)
+      callback(playlist_id, tracks);
     })
 }
 

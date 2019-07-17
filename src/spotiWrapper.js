@@ -28,6 +28,8 @@ module.exports = {
 					}
 			}
 
+
+			//TODO Handle Errors
 			return new Promise((resolve, reject) => 
 			{
 				request(options, (error, response, body) => 
@@ -41,14 +43,15 @@ module.exports = {
 		this.getMe = () =>
 		{
 			var options = { method: 'GET',
-				url: 'https://api.spotify.com/v1/me',
-				headers: 
-				{ 
-					Authorization: 'Bearer ' + this.access_token, 
-				} };
-
-
-				return new Promise((resolve, reject) => 
+			url: 'https://api.spotify.com/v1/me',
+			headers: 
+			{ 
+				Authorization: 'Bearer ' + this.access_token, 
+			} };
+			
+			
+			//TODO Handle Errors
+			return new Promise((resolve, reject) => 
 			{
 				request(options, (error, response, body) => 
 				{

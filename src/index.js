@@ -4,7 +4,8 @@ const PORT = process.env.PORT || 5000
 var request = require("request");
 const app = express();
 const SpotifyWebApi = require('spotify-web-api-node');
-const { SpotifyAPI } = require('./spotiWrapper')
+const { SpotifyAPI } = require('./SpotiWrapper')
+const { Nexus } = require('./Nexus')
 const uuid = require('uuid/v4');
 
 var { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, BACKEND, REDIRECT_URI } = require('./CONNECTION_DATA');
@@ -167,6 +168,7 @@ app.get('/retrieve', (req, res) => //TODO Changeit into post
 	if (requestParams.logged) {
 		//authenticate
 
+		
 		user = DB.getUserFromSBID(requestParams.SBID); //Gets user from DB
 
 		if (user === null) { //if user isn't in database return

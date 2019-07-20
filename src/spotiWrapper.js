@@ -5,15 +5,27 @@ const { logme } = require('./logme')
 
 
 module.exports = {
-	SpotifyAPI: function ({ client_id, client_secret, redirect_uri }) {
+	SpotifyAPI: function ({ client_id, client_secret, redirect_uri, logged }) {
 		this.client_id = client_id;
 		this.client_secret = client_secret;
-		this.access_token = undefined;
-		this.refresh_token = undefined;
+		this.access_token = null;
+		this.refresh_token = null;
 		this.redirect_uri = redirect_uri;
 
-		this.setAccessToken = (access_token) => this.access_token = access_token;
-		this.setRefreshToken = (refresh_token) => this.refresh_token = refresh_token;
+		this.logged = logged;
+		this.user_id = null;
+
+		this.setAccessToken = (access_token) => {
+			this.access_token = access_token
+			console.log('ACCESS TOKEN SET::: ' + this.access_token)
+		}; 
+		this.setRefreshToken = (refresh_token) => {
+			this.refresh_token = refresh_token;
+			 console.log('REFRESH TOKEN SET::: ' + this.refresh_token)
+			}
+		this.setUserId = (user_id) => {
+			this.user_id = user_id;
+			 console.log('USER ID SET::: ' + this.user_id)}
 
 
 		this.authorizationCodeGrant = (authorizationCode) => {
@@ -59,33 +71,56 @@ module.exports = {
 			})
 		}
 
-
-
-		this.refreshAccessToken = () => {
-			var options = {
-				method: 'POST',
-				url: 'https://accounts.spotify.com/api/token',
-				headers:
-				{
-					Authorization: 'Basic MzBlM2ViZDI1ZmQwNGFjNWIxZTJkZmU4ODlmZGM5MGM6ZDAxYWRlODBhYjc4NDlhYjk5OWNiMDEyNjU0OTkxZGY=',
-					'Content-Type': 'application/x-www-form-urlencoded'
-				},
-				form:
-				{
-					grant_type: 'refresh_token',
-					//TODO Change into give.me func
-					refresh_token: this.refresh_token
-				}
-			};
-
+		this.getUser = (user_id) => {
 			return new Promise((resolve, reject) => {
-				request(options, function (error, response, body) {
-					if (error) throw new Error(error);
-					resolve(JSON.parse(response.body));
-				});
+				console.log('Getting user ', user_id)
+				request(`https://api.spotify.com/v1/users/${user_id}`,
+					{ headers: { Authorization: 'Bearer ' + this.giveMe.access_token() } },
+					(algo, response) => {
+						response = JSON.parse(response.body);
+						if (response.error !== undefined) {
+							console.log('ERROR: ', response.error)
+							//User Not Found
+							reject({
+								code: 404,
+								success: true,
+								reason: 'user not found',
+								user_id: user_id,
+							});
+						}else{
+							resolve(response)
+						}
+					})
 			})
-
 		},
+
+
+
+			this.refreshAccessToken = () => {
+				var options = {
+					method: 'POST',
+					url: 'https://accounts.spotify.com/api/token',
+					headers:
+					{
+						Authorization: 'Basic MzBlM2ViZDI1ZmQwNGFjNWIxZTJkZmU4ODlmZGM5MGM6ZDAxYWRlODBhYjc4NDlhYjk5OWNiMDEyNjU0OTkxZGY=',
+						'Content-Type': 'application/x-www-form-urlencoded'
+					},
+					form:
+					{
+						grant_type: 'refresh_token',
+						//TODO Change into give.me func
+						refresh_token: this.refresh_token
+					}
+				};
+
+				return new Promise((resolve, reject) => {
+					request(options, function (error, response, body) {
+						if (error) throw new Error(error);
+						resolve(JSON.parse(response.body));
+					});
+				})
+
+			},
 
 
 
@@ -154,12 +189,24 @@ module.exports = {
 
 				access_token: () => this.access_token,
 				refresh_token: () => this.refresh_token,
-				
+
 				redirect_uri: () => this.redirect_uri,
 				encoded: () => {
 					let code = this.giveMe.client_id() + ':' + this.giveMe.client_secret()
 					let buf = new Buffer.alloc(code.length, code)
 					return buf.toString('base64')
+				},
+				user: () => {
+					return new Promise((resolve, reject) => {
+						if (this.user !== null) {
+							this.getUser(this.user_id).then(user => resolve(user), error => reject(error))
+						}
+						else {
+							this.getMe().then(user => resolve(user))
+						}
+
+
+					})
 				}
 			}
 

@@ -23,6 +23,7 @@ var Wrapper = new SpotifyAPI({
 var GuestWrapper = new SpotifyAPI({
 	client_id: CLIENT_ID,
 	client_secret: CLIENT_SECRET,
+	logged: false
 });
 
 //Gets Client Credentials Token and sets a timeout
@@ -110,9 +111,9 @@ app.get('/retrieve', (req, res) => {
 		SBID: req.query.SBID.trim() === 'null' ? null : req.query.SBID.trim(), //SB User ID
 		offset: parseInt(req.query.offset.trim()),
 
-		//user playlists or playlist tracks
+		//user playlists or playlist tracks or user data
 		retrieve: req.query.retrieve.trim(),
-		retrieve_user: req.query.retrieve.trim() === 'true' ? true : req.query.retrieve.trim() === 'false' ? false : 'invalid',
+		retrieve_user_data: req.query.retrieve.trim() === 'true' ? true : req.query.retrieve.trim() === 'false' ? false : 'invalid',
 
 		//in case of retrieving playlist tracks:
 		playlist_id: req.query.playlist_id !== undefined ? req.query.playlist_id.trim() : null,
@@ -148,27 +149,42 @@ app.get('/retrieve', (req, res) => {
 		res.send();
 	}
 
+	if (!requestParams.logged) GuestWrapper.setUserId(requestParams.user_id)
 
-	if (requestParams.logged) {
-		Nexus.checkUserAndUpdateWrapper(requestParams.SBID, Wrapper)
-			.then(() => retrieveRedirect(res, requestParams, Wrapper))
-	} else retrieveRedirect(res, requestParams, GuestWrapper)
+
+	retrieveRedirect(res, requestParams)
 });
 
 
 //TOKEN Used only on guests, else using API Wrapper
-function retrieveRedirect(res, requestParams, Wrapper) {
-	switch (requestParams.retrieve) {
+function retrieveRedirect(res, data) {
+	let CurrentWrapper;
+
+	if (data.logged) { CurrentWrapper = Wrapper }
+	else { CurrentWrapper = GuestWrapper }
+
+	switch (data.retrieve) {
 		case 'playlists':
-			Wrapper.getMe()
-			.then(user =>{
-				SBFETCH.GetUserPlaylists(requestParams, Wrapper).then(playlists => res.json({ playlists, user}) )
-				
-			})
+			SBFETCH.GetUserPlaylists(data, CurrentWrapper.giveMe.access_token())
+				.then(playlists => {
+					if (data.retrieve_user_data) {
+						CurrentWrapper.giveMe.user()
+							.then(user => {
+								res.json({ playlists, user })
+							}, error => {
+								console.log(error)
+								res.json(error)
+							})
+					} else res.json({ playlists })
+				}
+				)
+
 			break;
 
 		case 'playlist_tracks':
-			plMakeRequestTracks({ playlist_id: requestParams.playlist_id, token, callback: (playlist_id, tracks) => res.json({ playlist_id, tracks }) })
+			console.log('hola gente')
+			SBFETCH.GetPlaylistTracks(requestParams.playlist_id, {}, Wrapper)
+				.then(tracks => console.log(tracks))
 			break;
 
 		//TODO
@@ -184,8 +200,8 @@ function retrieveRedirect(res, requestParams, Wrapper) {
 
 function fetchPlaylists(res, { user_id, logged, SBID, offset }) {
 	if (logged) {
-				// Get Playlists
-				plMakeRequest(user.user_id, offset, user.access_token, (playlists) => res.json({ user: user_data, playlists: playlists }))
+		// Get Playlists
+		plMakeRequest(user.user_id, offset, user.access_token, (playlists) => res.json({ user: user_data, playlists: playlists }))
 
 	} else //Guest fetching playlists
 	{

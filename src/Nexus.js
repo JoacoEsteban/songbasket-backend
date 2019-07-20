@@ -25,7 +25,7 @@ module.exports = {
                             DB.updateToken(SBID, user.access_token);
                             Wrapper.setAccessToken(user.access_token);
 
-                            resolve(user.access_token)
+                            resolve()
                         },
                         function (err) {
                             console.log('Could not refresh access token', err);
@@ -33,7 +33,7 @@ module.exports = {
                         }
                     );
 
-                } else resolve(user.access_token)
+                } else resolve()
 
             })
         }

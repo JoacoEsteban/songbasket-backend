@@ -1,7 +1,0 @@
-TODO Build Database with user object as :
-{
-    user_id: 'joaqo.esteban',
-    user_access_token: 'xxxx',
-    user_refresh_token: 'xxxx',
-    last_updated: DATE
-}

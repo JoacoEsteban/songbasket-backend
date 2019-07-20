@@ -28,7 +28,6 @@ module.exports = {
 					}
 			}
 
-
 			//TODO Handle Errors
 			return new Promise((resolve, reject) => 
 			{
@@ -63,7 +62,29 @@ module.exports = {
 		
 		
 		
-		
+		this.refreshAccessToken = () => {
+			var options = { method: 'POST',
+			url: 'https://accounts.spotify.com/api/token',
+			headers: 
+			{ 
+				Authorization: 'Basic MzBlM2ViZDI1ZmQwNGFjNWIxZTJkZmU4ODlmZGM5MGM6ZDAxYWRlODBhYjc4NDlhYjk5OWNiMDEyNjU0OTkxZGY=',
+				'Content-Type': 'application/x-www-form-urlencoded' },
+				form: 
+				{ 
+					grant_type: 'refresh_token',
+					refresh_token:  this.refresh_token
+				} };
+				
+			return new Promise((resolve, reject) => 
+			{
+				request(options, function (error, response, body)
+				{
+					if (error) throw new Error(error);
+					resolve(JSON.parse(response.body));
+				});
+			})
+
+		},
 		
 		
 		

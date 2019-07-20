@@ -163,52 +163,11 @@ app.get('/retrieve', (req, res) => //TODO Changeit into post
 	}
 
 
-
-	var loggedToken;
-	if (requestParams.logged) {
-		//authenticate
-
-		
-		user = DB.getUserFromSBID(requestParams.SBID); //Gets user from DB
-
-		if (user === null) { //if user isn't in database return
-			res.set({
-				success: false,
-				reason: 'user not logged in',
-
-				requestParams,
-			});
-			res.send();
-		}
-
-		spotifyApi.setAccessToken(user.access_token);
-		spotifyApi.setRefreshToken(user.refresh_token);
-
-		loggedToken = user.access_token;
-
-		if (!(Date.now() - user.token_created_at < 3600 * 1000)) {
-
-			//Retrieve NEW Access Token
-			spotifyApi.refreshAccessToken().then(
-				function (data) {
-					console.log('The access token has been refreshed!');
-
-					loggedToken = data.body['access_token'];
-
-					DB.updateToken(SBID, loggedToken);
-					spotifyApi.setAccessToken(loggedToken);
-
-					retrieveRedirect(res, requestParams, loggedToken)
-				},
-				function (err) {
-					console.log('Could not refresh access token', err);
-				}
-			);
-		} else retrieveRedirect(res, requestParams, loggedToken)
-
-	}
-
-	retrieveRedirect(res, requestParams, CCTOKEN);
+	if(requestParams.logged) {
+		Nexus.checkUserAndUpdateWrapper(requestParams.SBID, Wrapper)
+		.then(token => retrieveRedirect(res, requestParams, token) )
+	}else retrieveRedirect(res, requestParams, CCTOKEN)
+	
 
 
 });

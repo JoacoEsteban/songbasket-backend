@@ -95,9 +95,9 @@ exports.DB = {
     {
         var userIndex = getUserIndexFromSBID(SBID);
         
-        if(userIndex === -1 ) //TODO Handle missing user
+        if(userIndex === -1 )
         {
-
+            console.error('ERROR WHILE UPDATING USER TOKEN: USER NOT FOUND')
         }else DATA_BASE[userIndex].access_token = token; //Updates token from database
     }
 

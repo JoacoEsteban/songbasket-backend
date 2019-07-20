@@ -10,6 +10,7 @@ const uuid = require('uuid/v4');
 
 var { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, BACKEND, REDIRECT_URI } = require('./CONNECTION_DATA');
 const { DB } = require('./DB')
+const { SBFETCH } = require('./SBFETCH')
 const { logme } = require('./logme')
 
 
@@ -19,26 +20,13 @@ var Wrapper = new SpotifyAPI({
 	redirect_uri: REDIRECT_URI
 });
 
-
-
-
-
-
-
-var spotifyApi = new SpotifyWebApi({
-	clientId: CLIENT_ID,
-	clientSecret: CLIENT_SECRET,
-	redirectUri: REDIRECT_URI
+var GuestWrapper = new SpotifyAPI({
+	client_id: CLIENT_ID,
+	client_secret: CLIENT_SECRET,
 });
 
-//CLIENT CREDENTIALS To for Guest Users
-var spotifyApiCC = new SpotifyWebApi({
-	clientId: CLIENT_ID,
-	clientSecret: CLIENT_SECRET,
-});
-var CCTOKEN;
-
-CCGrant(); //Gets Client Credentials Token and sets a timeout
+//Gets Client Credentials Token and sets a timeout
+GuestWrapper.CCInit()
 
 
 app.use((req, res, next) => {
@@ -61,11 +49,10 @@ app.get('/handle_authorization', (req, res) => {
 	var authorizationCode = req.query.code;
 	logme(`Authorization Code: ${authorizationCode}`);
 
-	if (authorizationCode !== undefined)
-	{
+	if (authorizationCode !== undefined) {
 		//Get Access Token and Refresh Token
 		Wrapper.authorizationCodeGrant(authorizationCode)
-			.then(function ({access_token, refresh_token}) {
+			.then(function ({ access_token, refresh_token }) {
 
 				//Updates user to be pushed to database
 				newUser.access_token = access_token;
@@ -95,7 +82,7 @@ app.get('/handle_authorization', (req, res) => {
 							SBID: newUser.SBID,
 							success: true,
 						});
-						
+
 						res.send()
 					});
 
@@ -115,8 +102,7 @@ app.get('/fail', (req, res) => {
 
 
 
-app.get('/retrieve', (req, res) => //TODO Changeit into post
-{
+app.get('/retrieve', (req, res) => {
 	var requestParams =
 	{
 		user_id: req.query.user_id.trim() === '' ? false : req.query.user_id.trim(),
@@ -163,25 +149,31 @@ app.get('/retrieve', (req, res) => //TODO Changeit into post
 	}
 
 
-	if(requestParams.logged) {
+	if (requestParams.logged) {
 		Nexus.checkUserAndUpdateWrapper(requestParams.SBID, Wrapper)
-		.then(token => retrieveRedirect(res, requestParams, token) )
-	}else retrieveRedirect(res, requestParams, CCTOKEN)
-	
-
-
+			.then(() => retrieveRedirect(res, requestParams, Wrapper))
+	} else retrieveRedirect(res, requestParams, GuestWrapper)
 });
 
 
-function retrieveRedirect(res, requestParams, token) //TOKEN Used only on guests, else using API Wrapper
-{
+//TOKEN Used only on guests, else using API Wrapper
+function retrieveRedirect(res, requestParams, Wrapper) {
 	switch (requestParams.retrieve) {
 		case 'playlists':
-			fetchPlaylists(res, requestParams);
+			Wrapper.getMe()
+			.then(user =>{
+				SBFETCH.GetUserPlaylists(requestParams, Wrapper).then(playlists => res.json({ playlists, user}) )
+				
+			})
 			break;
 
 		case 'playlist_tracks':
 			plMakeRequestTracks({ playlist_id: requestParams.playlist_id, token, callback: (playlist_id, tracks) => res.json({ playlist_id, tracks }) })
+			break;
+
+		//TODO
+		case 'user_profile':
+			// plMakeRequestTracks({ playlist_id: requestParams.playlist_id, token, callback: (playlist_id, tracks) => res.json({ playlist_id, tracks }) })
 			break;
 	}
 }
@@ -192,50 +184,8 @@ function retrieveRedirect(res, requestParams, token) //TOKEN Used only on guests
 
 function fetchPlaylists(res, { user_id, logged, SBID, offset }) {
 	if (logged) {
-
-		user = DB.getUserFromSBID(SBID); //Gets user from DB
-
-		if (user === null) { //if user isn't in database return
-			res.set({
-				success: false,
-				reason: 'user not logged in',
-
-				user_id,
-				logged,
-				SBID,
-				offset,
-			});
-			res.send();
-		}
-
-
-		spotifyApi.setAccessToken(user.access_token);
-		spotifyApi.setRefreshToken(user.refresh_token);
-
-		spotifyApi.getMe() //IF ACCESS TOKEN WORKS (also gets user info to respond to frontend)
-			.then(function (user_data) {
-				user_data = user_data.body;
-				user_data.SBID = SBID;
-				user_data.logged = logged;
-
 				// Get Playlists
 				plMakeRequest(user.user_id, offset, user.access_token, (playlists) => res.json({ user: user_data, playlists: playlists }))
-			},
-				function (err) { //IF IT'S EXPIRED, REQUEST A NEW ONE AND UPDATE IT IN THE DATABASE
-					spotifyApi.refreshAccessToken().then(
-						function (data) {
-							console.log('The access token has been refreshed!');
-
-							DB.updateToken(user_id, data.body['access_token']);
-							spotifyApi.setAccessToken(token);
-
-							fetchPlaylists(res, { user_id, logged, SBID, offset })
-						},
-						function (err) {
-							console.log('Could not refresh access token', err);
-						}
-					);
-				});
 
 	} else //Guest fetching playlists
 	{
@@ -282,13 +232,6 @@ async function plMakeRequestTEMP(user_id, offset, token, callback) {
 }
 
 
-async function plMakeRequest(user_id, offset, token, callback) {
-	let res = await request(`https://api.spotify.com/v1/users/${user_id}/playlists?limit=50&offset=${offset}`, { headers: { Authorization: 'Bearer ' + token } },
-		(algo, playlists) => callback(JSON.parse(playlists.body)))
-}
-
-
-
 
 async function plMakeRequestTracks({ playlist_id, token, callback }) {
 	let res = await request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track)&offset=${0}`, { headers: { Authorization: 'Bearer ' + token } },
@@ -302,30 +245,3 @@ async function plMakeRequestTracks({ playlist_id, token, callback }) {
 
 
 
-
-function CCGrant() {
-	logme('RETRIEVING CC ACCESS TOKEN::::::::::')
-	spotifyApiCC.clientCredentialsGrant().then(
-		function (data) {
-			logme('SUCCESS::::::::::')
-			CCTOKEN = data.body['access_token'];
-			console.log('The access token expires in ' + data.body['expires_in']);
-			console.log('The access token is ' + data.body['access_token']);
-
-			// Save the access token so that it's used in future calls
-			spotifyApi.setAccessToken(data.body['access_token']);
-
-			setTimeout(() => {
-				CCGrant();
-			}, 3600 * 1000);
-
-		},
-		function (err) {
-			console.log('Something went wrong when retrieving an access token, Trying again in 10 seconds', err);
-
-			setTimeout(() => {
-				CCGrant();
-			}, 10 * 1000);
-		}
-	);
-}

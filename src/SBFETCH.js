@@ -21,12 +21,12 @@ module.exports = {
                     { headers: { Authorization: 'Bearer ' + access_token } }
                     ,(algo, tracks) => {
                         tracks = JSON.parse(tracks.body)
-                        console.log('LENGTH::::::::::::::::::::::::: ' , tracksObject.length)
+                        console.log('AMMOUNT OF ACCUMULATED TRACKS:: ' , tracksObject.length)
                         tracksObject = [...tracksObject, ...tracks.items]
                         if (tracksObject.length < tracks.total) {
 
-                            console.log('RETRIEVING MORE SONGS::: ' + tracks.items.length + ' out of ' + tracks.total)
-                            this.GetPlaylistTracks(playlist_id, tracksObject, tracks.items.length, access_token).then(tracks => resolve(tracks))
+                            console.log('RETRIEVING MORE SONGS::: ' + tracksObject.length + ' out of ' + tracks.total)
+                            this.GetPlaylistTracks(playlist_id, tracksObject, tracksObject.length, access_token).then(tracks => resolve(tracks))
                         
                         } else {
                             console.log('Tracks Done::: ')

@@ -183,7 +183,10 @@ function retrieveRedirect(res, data) {
 
 		case 'playlist_tracks':
 			SBFETCH.GetPlaylistTracks(data.playlist_id, [], 0, CurrentWrapper.giveMe.access_token())
-				.then(tracks => console.log('LLEGAMO: ', tracks.length))
+				.then(tracks => {
+					console.log('Number of tracks Retireved: ', tracks.length)
+					res.json({ tracks, request: data })
+				})
 			break;
 
 		//TODO

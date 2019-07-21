@@ -119,7 +119,7 @@ app.get('/retrieve', (req, res) => {
 		playlist_id: req.query.playlist_id !== undefined ? req.query.playlist_id.trim() : null,
 	}
 
-	console.log(requestParams);
+	console.log('REQUEST PARAMS:::::', requestParams);
 
 	//Request Validation
 
@@ -170,21 +170,20 @@ function retrieveRedirect(res, data) {
 					if (data.retrieve_user_data) {
 						CurrentWrapper.giveMe.user()
 							.then(user => {
-								res.json({ playlists, user })
+								res.json({ playlists, user, request: data })
 							}, error => {
 								console.log(error)
 								res.json(error)
 							})
-					} else res.json({ playlists })
+					} else res.json({ playlists, request: data })
 				}
 				)
 
 			break;
 
 		case 'playlist_tracks':
-			console.log('hola gente')
-			SBFETCH.GetPlaylistTracks(requestParams.playlist_id, {}, Wrapper)
-				.then(tracks => console.log(tracks))
+			SBFETCH.GetPlaylistTracks(data.playlist_id, [], 0, CurrentWrapper.giveMe.access_token())
+				.then(tracks => console.log('LLEGAMO: ', tracks.length))
 			break;
 
 		//TODO
@@ -247,16 +246,6 @@ async function plMakeRequestTEMP(user_id, offset, token, callback) {
 		})
 }
 
-
-
-async function plMakeRequestTracks({ playlist_id, token, callback }) {
-	let res = await request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track)&offset=${0}`, { headers: { Authorization: 'Bearer ' + token } },
-		(algo, tracks) => {
-			tracks = JSON.parse(tracks.body).items;
-			console.log(tracks)
-			callback(playlist_id, tracks);
-		})
-}
 
 
 

@@ -12,17 +12,33 @@ module.exports = {
                     { headers: { Authorization: 'Bearer ' + access_token } },
                     (algo, playlists) => resolve(JSON.parse(playlists.body)))
             })
+        },
+
+        GetPlaylistTracks: function (playlist_id, tracksObject, offset, access_token) {
+            
+            return new Promise((resolve, reject) => {
+                request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track), total, offset&offset=${offset}`,
+                    { headers: { Authorization: 'Bearer ' + access_token } }
+                    ,(algo, tracks) => {
+                        tracks = JSON.parse(tracks.body)
+                        console.log('LENGTH::::::::::::::::::::::::: ' , tracksObject.length)
+                        tracksObject = [...tracksObject, ...tracks.items]
+                        if (tracksObject.length < tracks.total) {
+
+                            console.log('RETRIEVING MORE SONGS::: ' + tracks.items.length + ' out of ' + tracks.total)
+                            this.GetPlaylistTracks(playlist_id, tracksObject, tracks.items.length, access_token).then(tracks => resolve(tracks))
+                        
+                        } else {
+                            console.log('Tracks Done::: ')
+                            console.log({items: tracksObject})
+                            resolve(tracksObject)
+                        }
+                        // console.log(tracks)
+                    })
+            })
         }
-    },
 
-    GetPlaylistTracks: function (playlist_id, tracksObject, access_token) {
-        return new Promise((resolve, reject) => {
-            request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track)&offset=${0}`,
-                { headers: { Authorization: 'Bearer ' + access_token } },
-                (algo, tracks) => resolve(JSON.parse(tracks.body)))
-        })
     }
-
 }
 
 

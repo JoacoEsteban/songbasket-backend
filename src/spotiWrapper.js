@@ -199,7 +199,6 @@ module.exports = {
 				user: () => {
 					return new Promise((resolve, reject) => {
 						if (this.user_id !== null) {
-							logme('klajsdjfkasljdkfalksdf' + this.user)
 							this.getUser(this.user_id).then(user => resolve(user), error => reject(error))
 						}
 						else {

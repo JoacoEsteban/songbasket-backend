@@ -116,7 +116,7 @@ app.get('/retrieve', (req, res) => {
 		retrieve_user_data: req.query.retrieve.trim() === 'true' ? true : req.query.retrieve.trim() === 'false' ? false : 'invalid',
 
 		//in case of retrieving playlist tracks:
-		playlist_id: req.query.playlist_id.trim() === 'undefined' || req.query.playlist_id.trim() === 'null' ?  null : req.query.playlist_id.trim(),
+		playlist_id: req.query.playlist_id === undefined || req.query.playlist_id.trim() === 'null' ?  null : req.query.playlist_id.trim(),
 	}
 
 	console.log('DOUUUUUUUUUUUU', req.query.playlist_id, null )

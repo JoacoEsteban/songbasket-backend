@@ -27,7 +27,12 @@ module.exports = {
                     ,(algo, tracks) => {
                         tracks = JSON.parse(tracks.body)
                         console.log('AMMOUNT OF ACCUMULATED TRACKS:: ' , tracksObject.length)
-                        tracksObject = [...tracksObject, ...tracks.items]
+
+                        for(let i = 0; i < tracks.items.length; i++){
+                            tracksObject = [...tracksObject, tracks.items[i].track]
+                        }
+
+                        // tracksObject = [...tracksObject, ...tracks.items]
                         if (tracksObject.length < tracks.total) {
                             
                             console.log('RETRIEVING MORE SONGS::: ' + tracksObject.length + ' out of ' + tracks.total)
@@ -35,7 +40,7 @@ module.exports = {
                             
                         } else {
                             console.log('Tracks Done::: ')
-                            console.log({items: tracksObject})
+                            console.log(`items: ${tracksObject}`)
                             resolve(tracksObject)
                         }
                         // console.log(tracks)

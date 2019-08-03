@@ -17,17 +17,22 @@ module.exports = {
         GetPlaylistTracks: function (playlist_id, tracksObject, offset, access_token) {
             
             return new Promise((resolve, reject) => {
-                request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track), total, offset&offset=${offset}`,
+                if(playlist_id === null || playlist_id === undefined) {
+                    reject('PLAYLIST ID NULL')
+                }else{
+                    console.log("PLLAYYLIST A VER PVTOS::", playlist_id === 'null')
+
+                    request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track), total, offset&offset=${offset}`,
                     { headers: { Authorization: 'Bearer ' + access_token } }
                     ,(algo, tracks) => {
                         tracks = JSON.parse(tracks.body)
                         console.log('AMMOUNT OF ACCUMULATED TRACKS:: ' , tracksObject.length)
                         tracksObject = [...tracksObject, ...tracks.items]
                         if (tracksObject.length < tracks.total) {
-
+                            
                             console.log('RETRIEVING MORE SONGS::: ' + tracksObject.length + ' out of ' + tracks.total)
                             this.GetPlaylistTracks(playlist_id, tracksObject, tracksObject.length, access_token).then(tracks => resolve(tracks))
-                        
+                            
                         } else {
                             console.log('Tracks Done::: ')
                             console.log({items: tracksObject})
@@ -35,6 +40,7 @@ module.exports = {
                         }
                         // console.log(tracks)
                     })
+                }
             })
         }
 

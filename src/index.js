@@ -116,8 +116,10 @@ app.get('/retrieve', (req, res) => {
 		retrieve_user_data: req.query.retrieve.trim() === 'true' ? true : req.query.retrieve.trim() === 'false' ? false : 'invalid',
 
 		//in case of retrieving playlist tracks:
-		playlist_id: req.query.playlist_id !== undefined ? req.query.playlist_id.trim() : null,
+		playlist_id: req.query.playlist_id.trim() === 'undefined' || req.query.playlist_id.trim() === 'null' ?  null : req.query.playlist_id.trim(),
 	}
+
+	console.log('DOUUUUUUUUUUUU', req.query.playlist_id, null )
 
 	console.log('REQUEST PARAMS:::::', requestParams);
 
@@ -175,7 +177,7 @@ function retrieveRedirect(res, data) {
 								console.log(error)
 								res.json(error)
 							})
-					} else res.json({ playlists, request: data })
+					} else res.json({ playlists, request: data, error })
 				}
 				)
 
@@ -186,6 +188,10 @@ function retrieveRedirect(res, data) {
 				.then(tracks => {
 					console.log('Number of tracks Retireved: ', tracks.length)
 					res.json({ tracks, request: data })
+				})
+				.catch( error => {
+					console.log('Error when retrieving PL Tracks from GetPlaylistTracks: ', error)
+					res.json({tracks:null, request: data})
 				})
 			break;
 

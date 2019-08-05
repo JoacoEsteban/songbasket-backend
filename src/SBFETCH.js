@@ -20,8 +20,6 @@ module.exports = {
                 if(playlist_id === null || playlist_id === undefined) {
                     reject('PLAYLIST ID NULL')
                 }else{
-                    console.log("PLLAYYLIST A VER PVTOS::", playlist_id === 'null')
-
                     request(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks?fields=items.track(album(artists, external_urls, id, images, name), artists, name, duration_ms, id, track), total, offset&offset=${offset}`,
                     { headers: { Authorization: 'Bearer ' + access_token } }
                     ,(algo, tracks) => {

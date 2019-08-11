@@ -142,9 +142,10 @@ app.get('/retrieve', (req, res) => {
 
 		//in case of retrieving playlist tracks:
 		playlist_id: req.query.playlist_id === undefined || req.query.playlist_id.trim() === 'null' ?  null : req.query.playlist_id.trim(),
+		tracks: req.query.tracks !== undefined ? JSON.parse(req.query.tracks) : null 
 	}
 
-	console.log('REQUEST PARAMS:::::', requestParams);
+	console.log('REQUEST PARAMS:::::', requestParams) ;
 
 	//Request Validation
 
@@ -219,65 +220,16 @@ function retrieveRedirect(res, data) {
 			break;
 
 		//TODO
+		case 'youtube_convert':
+			SBFETCH.SearchTrackOnYT(data.tracks)
+			break;
+
+		//TODO
 		case 'user_profile':
 			// plMakeRequestTracks({ playlist_id: requestParams.playlist_id, token, callback: (playlist_id, tracks) => res.json({ playlist_id, tracks }) })
 			break;
 	}
 }
-
-
-
-
-
-function fetchPlaylists(res, { user_id, logged, SBID, offset }) {
-	if (logged) {
-		// Get Playlists
-		plMakeRequest(user.user_id, offset, user.access_token, (playlists) => res.json({ user: user_data, playlists: playlists }))
-
-	} else //Guest fetching playlists
-	{
-		request(`https://api.spotify.com/v1/users/${user_id}`, { headers: { Authorization: 'Bearer ' + CCTOKEN } },
-			(algo, response) => {
-				response = JSON.parse(response.body);
-				if (response.error !== undefined) //User Not Found
-				{
-					res.json({
-						code: 404,
-						success: true,
-						reason: 'user not found',
-						user_id: user_id,
-					});
-					res.send();
-				}
-				else {
-					var guestUser = response; //User Profile Data
-					guestUser.logged = logged; //false
-					guestUser.SBID = null;
-
-
-					//Get Playlists
-					plMakeRequest(user_id, offset, CCTOKEN, (playlists) => res.json({ user: guestUser, playlists: playlists }))
-
-				}
-			})
-
-
-	}
-
-};
-
-async function plMakeRequestTEMP(user_id, offset, token, callback) {
-	let res = await request(`https://api.spotify.com/v1/users/${user_id}/playlists?limit=50&offset=${offset}`, { headers: { Authorization: 'Bearer ' + token } },
-		(algo, playlists) => {
-			playlists = JSON.parse(playlists.body)
-			var index = 0;
-
-			console.log('getting tracks: ', playlists)
-
-			plMakeRequestTracks({ playlists, index, token, callback })
-		})
-}
-
 
 
 

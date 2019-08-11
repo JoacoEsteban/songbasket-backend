@@ -45,6 +45,21 @@ module.exports = {
                     })
                 }
             })
+        },
+
+        SearchTrackOnYT: function (track) {
+            let query = `${track.name} ${track.artists[0].name}`
+            let duration = track.duration_ms / 1000 / 60
+            if(duration > 20) duration = 'long'
+            if(duration <= 20 && duration >= 4) duration = 'medium'
+            if(duration < 4) duration = 'short'
+
+            return new Promise((resolve, reject) => {
+                request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&videoCategoryId=10&key=AIzaSyATLB1QL1fgIxUL4YMLlzqnubrN8XydAfQ`)
+                .then(response => {
+                    console.log('YT:::', response)
+                })
+            })
         }
 
     }

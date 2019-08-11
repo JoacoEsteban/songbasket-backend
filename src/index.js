@@ -128,7 +128,10 @@ app.get('/fail', (req, res) => {
 
 
 
-app.get('/retrieve', (req, res) => {
+app.get('/retrieve/:type', (req, res) => {
+	if(req.params.type !== 'track'){
+		
+	}
 	var requestParams =
 	{
 		user_id: req.query.user_id.trim() === '' ? false : req.query.user_id.trim(),

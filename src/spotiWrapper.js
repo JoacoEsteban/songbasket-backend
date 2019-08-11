@@ -79,12 +79,12 @@ module.exports = {
 					(algo, response) => {
 						response = JSON.parse(response.body);
 						if (response.error !== undefined) {
-							console.log('ERROR: ', response.error)
+							console.log('ERROR WHEN SEARCHING FOR USER: ', response.error)
 							//User Not Found
 							reject({
-								code: 404,
+								code: response.error.status,
 								success: true,
-								reason: 'user not found',
+								reason: response.error.message,
 								user_id: user_id,
 							});
 						}else{

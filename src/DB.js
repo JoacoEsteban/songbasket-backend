@@ -11,6 +11,8 @@ var DATA_BASE = new Array();
 //     token_created_at
 // }
 
+function isNullOrUndefined(x) {return x === null || x === undefined}
+
 
 function getUserIndexFromSBID(SBID)
 {
@@ -37,7 +39,6 @@ function getUserIndexFromUserID(user_id)
 
 exports.DB = {
 
-
     publish(newUser) //Recieves an Object with the User ID and Refresh and Access Tokens. SBID Is Created here for new users and returned
     {
         var userIndex = getUserIndexFromUserID(newUser.user_id);
@@ -52,7 +53,7 @@ exports.DB = {
             return newUser.SBID;
         }else
         { //Overwrites with new data
-            newUser.SBID = DATA_BASE[userIndex].SBID;
+            newUser.SBID = isNullOrUndefined(DATA_BASE[userIndex].SBID) ? uuid() : DATA_BASE[userIndex].SBID ;
 
             DATA_BASE[userIndex] = newUser;
             console.log('USER EXISTS, OVERWRITTEN WITH NEW DATA::::::::::::::::', DATA_BASE[userIndex]);

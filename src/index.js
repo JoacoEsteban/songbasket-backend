@@ -95,6 +95,31 @@ app.get('/handle_authorization', (req, res) => {
 })
 
 
+app.get('/guest_sign_in', (req, res) => {
+	let {user_id} = req.query
+	if(user_id === 'null' || user_id === 'undefined' || user_id === null || user_id === undefined){
+		res.status(400);
+		res.set({
+			reason: 'username not provided'
+		})
+		res.send();
+	}else{
+		GuestWrapper.setUserId(user_id)
+		GuestWrapper.giveMe.user()
+		.then(resp => {
+			console.log('user:::::', resp)
+			resp.code = 200
+			res.json(resp)
+		})
+		.catch(err => {
+			res.json(err);
+			res.send();
+		})
+	}
+
+})
+
+
 app.get('/fail', (req, res) => {
 	res.render('pages/access_denied', { url: SPOTIFY_LOGIN_URL })
 })
@@ -170,12 +195,12 @@ function retrieveRedirect(res, data) {
 					if (data.retrieve_user_data) {
 						CurrentWrapper.giveMe.user()
 							.then(user => {
-								res.json({ playlists, user, request: data })
+								res.json({ playlists, user, request: data, code: 200 })
 							}, error => {
 								console.log(error)
 								res.json(error)
 							})
-					} else res.json({ playlists, request: data, error })
+					} else res.json({ playlists, request: data, code: 200 })
 				}
 				)
 

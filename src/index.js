@@ -1,3 +1,4 @@
+const util = require('util')
 const express = require('express')
 const path = require('path')
 const PORT = process.env.PORT || 5000
@@ -129,20 +130,31 @@ app.get('/fail', (req, res) => {
 
 
 app.get('/retrieve', (req, res) => {
-	var requestParams =
+	let query = req.query
+	let requestParams
+
+	if (query.retrieve === 'youtube_convert') {
+		requestParams = {
+			retrieve: query.retrieve,
+			track: JSON.parse(query.track),
+			logged: false
+		}
+		retrieveRedirect(res, requestParams)
+		return
+	}
+	else requestParams =
 	{
-		user_id: req.query.user_id.trim() === '' ? false : req.query.user_id.trim(),
-		logged: req.query.logged.trim() == 'false' ? false : req.query.logged.trim() == 'true' ? true : 'invalid', //wheter it's a SB logged user
-		SBID: req.query.SBID.trim() === 'null' ? null : req.query.SBID.trim(), //SB User ID
-		offset: parseInt(req.query.offset.trim()),
+		user_id: query.user_id.trim() === '' ? false : query.user_id.trim(),
+		logged: query.logged.trim() == 'false' ? false : query.logged.trim() == 'true' ? true : 'invalid', //wheter it's a SB logged user
+		SBID: query.SBID.trim() === 'null' ? null : query.SBID.trim(), //SB User ID
+		offset: parseInt(query.offset.trim()),
 
 		//user playlists or playlist tracks or user data
-		retrieve: req.query.retrieve.trim(),
-		retrieve_user_data: req.query.retrieve.trim() === 'true' ? true : req.query.retrieve.trim() === 'false' ? false : 'invalid',
+		retrieve: query.retrieve.trim(),
+		retrieve_user_data: query.retrieve.trim() === 'true' ? true : query.retrieve.trim() === 'false' ? false : 'invalid',
 
 		//in case of retrieving playlist tracks:
-		playlist_id: req.query.playlist_id === undefined || req.query.playlist_id.trim() === 'null' ?  null : req.query.playlist_id.trim(),
-		tracks: req.query.tracks !== undefined ? JSON.parse(req.query.tracks) : null 
+		playlist_id: query.playlist_id === undefined || query.playlist_id.trim() === 'null' ?  null : query.playlist_id.trim(),
 	}
 
 	console.log('REQUEST PARAMS:::::', requestParams) ;
@@ -221,7 +233,14 @@ function retrieveRedirect(res, data) {
 
 		//TODO
 		case 'youtube_convert':
-			SBFETCH.SearchTrackOnYT(data.tracks)
+			SBFETCH.SearchTrackOnYT(data.track)
+			.then(track => {
+				// console.log('YEYY', track)
+				console.log(util.inspect(track, {showHidden: false, depth: null}))
+			})
+			.catch(error => {
+				console.log('NOOO', error)
+			})
 			break;
 
 		//TODO

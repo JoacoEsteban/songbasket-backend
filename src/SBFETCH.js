@@ -55,9 +55,15 @@ module.exports = {
             if(duration < 4) duration = 'short'
 
             return new Promise((resolve, reject) => {
-                request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&videoCategoryId=10&key=AIzaSyATLB1QL1fgIxUL4YMLlzqnubrN8XydAfQ`)
-                .then(response => {
-                    console.log('YT:::', response)
+                request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&key=AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o`, {}, (error, response) => {
+                    if(error !== null) reject(error)    
+                    else {
+                        let fulltrackdata = {
+                            initial: JSON.parse(response.body)
+                        }
+                        //TODO Get track data and then resolve
+                        resolve(fullTrackData)
+                    }
                 })
             })
         }

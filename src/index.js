@@ -236,7 +236,12 @@ function retrieveRedirect(res, data) {
 			SBFETCH.SearchTrackOnYT(data.track)
 			.then(track => {
 				// console.log('YEYY', track)
-				console.log(util.inspect(track, {showHidden: false, depth: null}))
+				// console.log(util.inspect(track, {showHidden: false, depth: null}))
+				let obj = {
+					items: track.initial.items
+				}
+				console.log('about to send:: ', obj)
+				res.json(obj)
 			})
 			.catch(error => {
 				console.log('NOOO', error)

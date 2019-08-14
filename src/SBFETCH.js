@@ -58,7 +58,7 @@ module.exports = {
                 request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&key=AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o`, {}, (error, response) => {
                     if(error !== null) reject(error)    
                     else {
-                        let fulltrackdata = {
+                        let fullTrackData = {
                             initial: JSON.parse(response.body)
                         }
                         //TODO Get track data and then resolve

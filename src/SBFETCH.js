@@ -66,6 +66,28 @@ module.exports = {
                     }
                 })
             })
+        },
+
+        Youtubize: function (tracks) {
+            console.log('Trackies', tracks)
+            // let query = `${track.name} ${track.artists[0].name}`
+            // let duration = track.duration_ms / 1000 / 60
+            // if(duration > 20) duration = 'long'
+            // if(duration <= 20 && duration >= 4) duration = 'medium'
+            // if(duration < 4) duration = 'short'
+
+            // return new Promise((resolve, reject) => {
+            //     request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&key=AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o`, {}, (error, response) => {
+            //         if(error !== null) reject(error)    
+            //         else {
+            //             let fullTrackData = {
+            //                 initial: JSON.parse(response.body)
+            //             }
+            //             //TODO Get track data and then resolve
+            //             resolve(fullTrackData)
+            //         }
+            //     })
+            // })
         }
 
     }

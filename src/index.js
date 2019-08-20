@@ -133,10 +133,13 @@ app.get('/retrieve', (req, res) => {
 	let query = req.query
 	let requestParams
 
-	if (query.retrieve === 'youtube_convert') {
+	console.log('tamo viendo 1')
+	if (query.retrieve === 'youtubize') {
+		console.log('tamo viendo 2')
+		// TODO Implement this better
 		requestParams = {
 			retrieve: query.retrieve,
-			track: JSON.parse(query.track),
+			tracks: JSON.parse(query.tracks),
 			logged: false
 		}
 		retrieveRedirect(res, requestParams)
@@ -246,6 +249,22 @@ function retrieveRedirect(res, data) {
 			.catch(error => {
 				console.log('NOOO', error)
 			})
+			break;
+
+		case 'youtubize':
+			SBFETCH.Youtubize(data.tracks)
+			// .then(track => {
+			// 	// console.log('YEYY', track)
+			// 	// console.log(util.inspect(track, {showHidden: false, depth: null}))
+			// 	let obj = {
+			// 		items: track.initial.items
+			// 	}
+			// 	console.log('about to send:: ', obj)
+			// 	res.json(obj)
+			// })
+			// .catch(error => {
+			// 	console.log('NOOO', error)
+			// })
 			break;
 
 		//TODO

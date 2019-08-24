@@ -129,7 +129,7 @@ app.post('/youtubize', (req, res) => {
 	let tracks = JSON.parse(req.body.tracks)
 	SBFETCH.Youtubize(tracks)
 		.then(conclusion => {
-			console.log('Terminamo', conclusion)
+			console.log('Terminamo', conclusion[0].tracks)
 			res.json(conclusion)
 		})
 

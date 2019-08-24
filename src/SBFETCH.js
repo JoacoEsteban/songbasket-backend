@@ -72,24 +72,28 @@ module.exports = {
 			console.log('LENGHT', tracks.length)
 			let totalNumberOfTracks = 0
 			let currentCountOfTracks = 0
+			let devolver = []
             
 			return new Promise((resolve, reject) => {                
 				for(let i = 0; i < tracks.length; i++) {
 					let pl = tracks[i]
+					devolver = [...devolver, {id: pl.id, tracks: []}]
+
 					for(let o = 0; o < pl.tracks.length; o++) {
 						totalNumberOfTracks++
 						let track = pl.tracks[o]
-                    
+						
 						ytQuery(track)
 							.then(resp => {
 								let q = resp.items[0]
-								track.yt = {
+								devolver[i].tracks.push({id: track.id, yt: {
 									id: q.id.videoId,
 									snippet: q.snippet
-								}
+								}})
+
 								currentCountOfTracks++
 								if (currentCountOfTracks === totalNumberOfTracks){
-									resolve(tracks)
+									resolve(devolver)
 								}
 							})
 							.catch(err => reject(err))

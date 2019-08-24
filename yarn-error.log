@@ -1,5 +1,5 @@
 Arguments: 
-  /usr/local/bin/node /usr/local/Cellar/yarn/1.16.0/libexec/bin/yarn.js upgrade
+  /usr/local/bin/node /usr/local/Cellar/yarn/1.16.0/libexec/bin/yarn.js add body-parser --ignore-engines
 
 PATH: 
   /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin
@@ -14,8 +14,7 @@ Platform:
   darwin x64
 
 Trace: 
-  Error: getaddrinfo ENOTFOUND registry.yarnpkg.com
-      at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:60:26)
+  Error: EACCES: permission denied, mkdir '/Users/joaco/Repos/NODEJS/songbasket-backend/node_modules/@grpc/grpc-js/node_modules/semver'
 
 npm manifest: 
   {
@@ -39,6 +38,9 @@ npm manifest:
       "uuid": "^3.3.2"
     },
     "devDependencies": {
+      "eslint": "^6.2.2",
+      "eslint-config-airbnb-base": "^14.0.0",
+      "eslint-plugin-import": "^2.18.2",
       "request": "^2.81.0",
       "tape": "^4.7.0"
     },

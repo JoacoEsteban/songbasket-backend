@@ -85,6 +85,7 @@ module.exports = {
 						
 						ytQuery(track)
 							.then(resp => {
+								console.log(resp)
 								let q = resp.items[0]
 								devolver[i].tracks.push({id: track.id, yt: {
 									id: q.id.videoId,

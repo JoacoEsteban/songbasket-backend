@@ -127,11 +127,13 @@ app.get('/fail', (req, res) => {
 
 app.post('/youtubize', (req, res) => {
 	let tracks = JSON.parse(req.body.tracks)
+	console.log(tracks)
 	SBFETCH.Youtubize(tracks)
 		.then(conclusion => {
 			console.log('Terminamo', conclusion[0].tracks)
 			res.json(conclusion)
 		})
+		.catch(err => console.log(err))
 
 })
 

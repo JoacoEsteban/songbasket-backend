@@ -56,25 +56,25 @@ module.exports = {
 
 			return new Promise((resolve, reject) => {
 				request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&key=AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o`, {}, (error, response) => {
-					if(error !== null) reject(error)    
+					if(error !== null) reject(error)
 					else {
 						let fullTrackData = {
 							initial: JSON.parse(response.body)
 						}
-						//TODO Get track data and then resolve
 						resolve(fullTrackData)
 					}
 				})
 			})
 		},
 
+		// TODO Remove from here
 		Youtubize: function (tracks) {
 			console.log('LENGHT', tracks.length)
 			let totalNumberOfTracks = 0
 			let currentCountOfTracks = 0
 			let devolver = []
-            
-			return new Promise((resolve, reject) => {                
+
+			return new Promise((resolve, reject) => {
 				for(let i = 0; i < tracks.length; i++) {
 					let pl = tracks[i]
 					devolver = [...devolver, {id: pl.id, tracks: []}]
@@ -107,7 +107,7 @@ module.exports = {
 
 	}
 }
-
+// TODO And remove this
 function ytQuery ({query, duration}) {
 	return new Promise((resolve, reject) => {
 		request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&key=AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o`, {}, (error, response) => {

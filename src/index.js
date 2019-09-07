@@ -6,7 +6,8 @@ const app = express()
 app.use(bodyParser.json()) // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
 
-const { SpotifyAPI } = require('./SpotiWrapper')
+const { SpotifyAPI } = require('./Wrappers/SpotiWrapper')
+const { YouTubeAPI } = require('./Wrappers/YouTubeWrapper')
 // const { Nexus } = require('./Nexus')
 
 var { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, BACKEND, REDIRECT_URI } = require('./CONNECTION_DATA')
@@ -27,7 +28,11 @@ var GuestWrapper = new SpotifyAPI({
 	logged: false
 })
 
-//Gets Client Credentials Token and sets a timeout
+var YouTubeWrapper = new YouTubeAPI({
+	access_tokens: ['AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o', 'AIzaSyA5MM5by6DZfJbDE9Wyeg22P5_JGxaymtU', 'AIzaSyBT-Q2Yt-bfiV43tCIZCdFydkaLKSLMbo8', 'AIzaSyBBHEGzV2tB1uvm0i4fPsDKgr9NP_TuI1s']
+})
+
+// Gets Client Credentials Token and sets a timeout
 GuestWrapper.CCInit()
 
 
@@ -127,8 +132,8 @@ app.get('/fail', (req, res) => {
 
 app.post('/youtubize', (req, res) => {
 	let tracks = JSON.parse(req.body.tracks)
-	console.log(tracks)
-	SBFETCH.Youtubize(tracks)
+	// console.log(tracks)
+	YouTubeWrapper.Youtubize(tracks)
 		.then(conclusion => {
 			console.log('Terminamo', conclusion[0].tracks)
 			res.json(conclusion)
@@ -259,22 +264,6 @@ function retrieveRedirect(res, data) {
 			.catch(error => {
 				console.log('NOOO', error)
 			})
-		break
-
-	case 'youtubize':
-		SBFETCH.Youtubize(data.tracks)
-		// .then(track => {
-		// 	// console.log('YEYY', track)
-		// 	// console.log(util.inspect(track, {showHidden: false, depth: null}))
-		// 	let obj = {
-		// 		items: track.initial.items
-		// 	}
-		// 	console.log('about to send:: ', obj)
-		// 	res.json(obj)
-		// })
-		// .catch(error => {
-		// 	console.log('NOOO', error)
-		// })
 		break
 
 		//TODO

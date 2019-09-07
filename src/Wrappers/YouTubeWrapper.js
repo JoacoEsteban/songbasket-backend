@@ -68,9 +68,11 @@ module.exports = {
 
 								ytGetVideoDetails(videoIds, this.giveMe.current_access_token())
 									.then(results => {
+										let trackDurations = results.items.map(t => parseDuration(t.contentDetails.duration) )
+
 										// difference in duration respective to spotify track
-										let trackDurations = results.items.map(t => {
-											let vidDuration = parseDuration(t.contentDetails.duration) - track.duration_s
+										let trackDurationDifference = trackDurations.map(t => {
+											let vidDuration = t - track.duration_s
 											return vidDuration > 0 ? vidDuration : vidDuration * -1
 										})
 										
@@ -80,7 +82,7 @@ module.exports = {
 										})
 										
 										// BestMatch based on difference in video length
-										let bestMatch = ytQueries[calculateBestMatch(trackDurations)].id
+										let bestMatch = ytQueries[calculateBestMatch(trackDurationDifference)].id
 										devolver[i].tracks.push({id: track.id, yt: ytQueries, bestMatch})
 
 										currentCountOfTracks++

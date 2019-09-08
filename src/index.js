@@ -29,7 +29,7 @@ var GuestWrapper = new SpotifyAPI({
 })
 
 var YouTubeWrapper = new YouTubeAPI({
-	access_tokens: ['AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o', 'AIzaSyA5MM5by6DZfJbDE9Wyeg22P5_JGxaymtU', 'AIzaSyBT-Q2Yt-bfiV43tCIZCdFydkaLKSLMbo8', 'AIzaSyBBHEGzV2tB1uvm0i4fPsDKgr9NP_TuI1s']
+	access_tokens: ['AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o', 'AIzaSyDK_c1IaYKriY4PUh5kzgcrhdfupPBX9JA', 'AIzaSyBVaGqSXyqgqMHSSdo-QhWXLhsBgIFMw_M', 'AIzaSyBq4eThlAmqH4bkRYTtDUGZUMuFFIiZ6v0']
 })
 
 // Gets Client Credentials Token and sets a timeout
@@ -131,9 +131,9 @@ app.get('/fail', (req, res) => {
 })
 
 app.post('/youtubize', (req, res) => {
-	let tracks = JSON.parse(req.body.tracks)
-	// console.log(tracks)
-	YouTubeWrapper.Youtubize(tracks)
+	let playlists = JSON.parse(req.body.playlists)
+	console.log(playlists)
+	YouTubeWrapper.Youtubize(playlists, [])
 		.then(conclusion => {
 			console.log('Terminamo', conclusion[0].tracks)
 			res.json(conclusion)

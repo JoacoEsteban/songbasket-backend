@@ -238,14 +238,23 @@ function retrieveRedirect(res, data) {
 		break
 
 	case 'playlist_tracks':
-		SBFETCH.GetPlaylistTracks(data.playlist_id, [], 0, CurrentWrapper.giveMe.access_token())
-			.then(tracks => {
-				console.log('Number of tracks Retireved: ', tracks.length)
-				res.json({ tracks, request: data })
+		SBFETCH.GetPlaylistData(data.playlist_id, CurrentWrapper.giveMe.access_token())
+			.then(playlist => {
+				SBFETCH.GetPlaylistTracks(data.playlist_id, [], 0, CurrentWrapper.giveMe.access_token())
+					.then(tracks => {
+						console.log('Number of tracks Retireved: ', tracks.length)
+						playlist.tracks.items = tracks
+						res.json({ playlist, request: data })
+					})
+					.catch( error => {
+						console.log('Error when retrieving PL Tracks from GetPlaylistTracks: ', error)
+						playlist.tracks.items = null
+						res.json({playlist, request: data})
+					})
 			})
 			.catch( error => {
-				console.log('Error when retrieving PL Tracks from GetPlaylistTracks: ', error)
-				res.json({tracks:null, request: data})
+				console.log('Error when retrieving PL Data from GetPlaylistData: ', error)
+				res.json({playlist: null, request: data})
 			})
 		break
 

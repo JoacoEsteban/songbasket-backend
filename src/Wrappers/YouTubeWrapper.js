@@ -81,7 +81,8 @@ module.exports = {
 
 
 function YoutubizeFunction (playlists, token) {
-	let plControl = [...playlists] // Copy of playlists. Splices a track when completed so the array will be empty when all tracks have been retrieved
+	// Copy of playlists. Splices a track when completed so the array will be empty when all tracks have been retrieved
+	let plControl = playlists.map(c => c.tracks.length).reduce((acc, cur) => acc+cur)
 	let failed = {val: false, cont: 0} // If quota is exceeded this flag turns true, will cycle token and complete remaining requests
 	// Queue of queries to retry if quota has been exceeded
 
@@ -137,20 +138,55 @@ function YoutubizeFunction (playlists, token) {
 								devolver[PLAYLISTS_INDEX].tracks.push({id: track.id, yt: ytQueries, bestMatch})
 
 								// Track done. Removing it from control array
-								plControl[PLAYLISTS_INDEX].tracks.splice(TRACKS_INDEX, 1)
+								plControl --
 
 								// All tracks have been converted
 								if(!failed.val) {
-									let trackNum = plControl.map(c => c.tracks.length).reduce((acc, cur) => acc+cur)
-									console.log(111111111, failed, trackNum, PLAYLISTS_INDEX, TRACKS_INDEX)
-									if (trackNum === 0) {
-										console.log('DONEEEEEEEEEEEEEEEEEEEEEEEEE')
+									let dots = ''
+									for(let xd = 0; xd < plControl; xd++) dots += ':'
+									console.log('Remaining', dots, 'Done =>', PLAYLISTS_INDEX, TRACKS_INDEX)
+									if (plControl === 0) {
+										console.log('All Tracks Retrieved')
 										resolve(devolver)
 									}
 								}
 							})
 							.catch(err => {
-								console.log('ERROR WHEN GETTING VIDEO DURATIONS:::', err)
+								if(err.code === 403) {
+									failed = {
+										val: true,
+										cont: failed.cont + 1
+									}
+									
+									console.log('QUOTA EXCEEDED', failed.cont, plControl)
+									// All tracks have been processed
+									if (failed.cont - plControl === 0) {
+										console.log('listo papu')
+										let retry = [...playlists]
+		
+										for(let m = 0; m < retry.length; m++) {
+											let pl = retry[m]
+											let devpl = devolver[m]
+											if(devpl) {
+												for(let l = 0; l < devpl.tracks.length; l++) {
+													for(let q = 0; q < pl.tracks.length; q++) {
+														if (devpl.tracks[l].id === pl.tracks[q].id) {
+															retry[m].tracks.splice(q, 1)
+															break
+														}
+													}
+												}
+												
+											}
+		
+										}
+										reject({reason: 'quota', retrieved: devolver, retry})
+									}
+								} else {
+									console.log('ERROR WHEN GETTING VIDEO DURATIONS:::', err)
+									reject({reason: 'else', err})
+								}
+		
 							})
 					})
 					.catch(err => {
@@ -159,12 +195,30 @@ function YoutubizeFunction (playlists, token) {
 								val: true,
 								cont: failed.cont + 1
 							}
-							let remainingCont = plControl.map(c => c.tracks.length).reduce((acc, cur) => acc+cur)
-							console.log('QUOTA EXCEEDED', failed.cont, remainingCont)
+							
+							console.log('QUOTA EXCEEDED', failed.cont, plControl)
 							// All tracks have been processed
-							if (failed.cont - remainingCont === 0) {
+							if (failed.cont - plControl === 0) {
 								console.log('listo papu')
-								reject({reason: 'quota', retrieved: devolver, retry: plControl})
+								let retry = [...playlists]
+
+								for(let m = 0; m < retry.length; m++) {
+									let pl = retry[m]
+									let devpl = devolver[m]
+									if(devpl) {
+										for(let l = 0; l < devpl.tracks.length; l++) {
+											for(let q = 0; q < pl.tracks.length; q++) {
+												if (devpl.tracks[l].id === pl.tracks[q].id) {
+													retry[m].tracks.splice(q, 1)
+													break
+												}
+											}
+										}
+										
+									}
+
+								}
+								reject({reason: 'quota', retrieved: devolver, retry})
 							}
 						} else {
 							console.log('ERRORRRRR ON YTQUERY:::', err)

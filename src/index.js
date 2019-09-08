@@ -173,6 +173,7 @@ app.get('/retrieve', (req, res) => {
 
 		//in case of retrieving playlist tracks:
 		playlist_id: query.playlist_id === undefined || query.playlist_id.trim() === 'null' ?  null : query.playlist_id.trim(),
+		snapshot_id: query.snapshot_id === undefined || query.snapshot_id.trim() === 'null' ?  null : query.snapshot_id.trim()
 	}
 
 	console.log('REQUEST PARAMS:::::', requestParams) 
@@ -240,6 +241,13 @@ function retrieveRedirect(res, data) {
 	case 'playlist_tracks':
 		SBFETCH.GetPlaylistData(data.playlist_id, CurrentWrapper.giveMe.access_token())
 			.then(playlist => {
+				if (data.snapshot_id) {
+					if (data.snapshot_id === playlist.snapshot_id) {
+						console.log('SAME VERSION')
+						res.json({ playlist: {same_version: true}, request: data })
+						return
+					}
+				}
 				SBFETCH.GetPlaylistTracks(data.playlist_id, [], 0, CurrentWrapper.giveMe.access_token())
 					.then(tracks => {
 						console.log('Number of tracks Retireved: ', tracks.length)

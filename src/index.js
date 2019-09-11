@@ -247,8 +247,7 @@ function retrieveRedirect(res, data) {
 						res.json({ playlist: {same_version: true}, request: data })
 						return
 					}
-				}
-				SBFETCH.GetPlaylistTracks(data.playlist_id, [], 0, CurrentWrapper.giveMe.access_token())
+					SBFETCH.GetPlaylistTracks(data.playlist_id, [], 0, CurrentWrapper.giveMe.access_token())
 					.then(tracks => {
 						console.log('Number of tracks Retireved: ', tracks.length)
 						playlist.tracks.items = tracks
@@ -259,11 +258,12 @@ function retrieveRedirect(res, data) {
 						playlist.tracks.items = null
 						res.json({playlist, request: data})
 					})
-			})
-			.catch( error => {
-				console.log('Error when retrieving PL Data from GetPlaylistData: ', error)
-				res.json({playlist: null, request: data})
-			})
+				})
+				.catch( error => {
+					console.log('Error when retrieving PL Data from GetPlaylistData: ', error)
+					res.json({playlist: null, request: data})
+				})
+			}
 		break
 
 		//TODO

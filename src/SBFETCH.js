@@ -22,6 +22,7 @@ module.exports = {
 						{ headers: { Authorization: 'Bearer ' + access_token } }
 						,(algo, playlist) => {
 							playlist = JSON.parse(playlist.body)
+							if (playlist.error) reject(playlist.error)
 							resolve(playlist)
 						})
 				}

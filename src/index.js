@@ -146,57 +146,55 @@ app.post('/youtubize', (req, res) => {
 
 app.get('/retrieve', (req, res) => {
 	let query = req.query
-	let requestParams
-
-	console.log('tamo viendo 1')
-	if (query.retrieve === 'youtubize') {
-		console.log('tamo viendo 2')
-		// TODO Implement this better
-		requestParams = {
-			retrieve: query.retrieve,
-			tracks: JSON.parse(query.tracks),
-			logged: false
-		}
-		retrieveRedirect(res, requestParams)
-		return
+	let requestParams = {
+		retrieve: query.retrieve,
+		logged: query.logged.trim() == 'true' ? true : false, //wheter it's a SB logged user
 	}
-	else requestParams =
-	{
-		user_id: query.user_id.trim() === '' ? false : query.user_id.trim(),
-		logged: query.logged.trim() == 'false' ? false : query.logged.trim() == 'true' ? true : 'invalid', //wheter it's a SB logged user
-		SBID: query.SBID.trim() === 'null' ? null : query.SBID.trim(), //SB User ID
-		offset: parseInt(query.offset.trim()),
-
-		//user playlists or playlist tracks or user data
-		retrieve: query.retrieve.trim(),
-		retrieve_user_data: query.retrieve.trim() === 'true' ? true : query.retrieve.trim() === 'false' ? false : 'invalid',
-
-		//in case of retrieving playlist tracks:
-		playlist_id: query.playlist_id === undefined || query.playlist_id.trim() === 'null' ?  null : query.playlist_id.trim(),
-		snapshot_id: query.snapshot_id === undefined || query.snapshot_id.trim() === 'null' ?  null : query.snapshot_id.trim()
+	if(query.SBID) {
+		requestParams.SBID = query.SBID.trim() === 'null' ? null : query.SBID.trim() //SB User ID
 	}
-
-	console.log('REQUEST PARAMS:::::', requestParams) 
 
 	//Request Validation
-
 	var isValid = true
 	var reason = ''
-
-	if (requestParams.user_id === false) {
-		isValid = false
-		reason += 'User ID missing. '
-	}
-	if (requestParams.logged === 'invalid') {
-		isValid = false
-		reason += 'Logged parameter not provided. '
-	}
-	if (requestParams.logged === true && requestParams.SBID === false) {
+	if (requestParams.logged === true && requestParams.SBID === null) {
 		isValid = false
 		reason += 'SongBasket ID (SBID) missing.'
 	}
 
+	switch (requestParams.retrieve) {
+	case 'playlist_tracks':
+		//in case of retrieving playlist tracks:
+		requestParams = {
+			...requestParams,
+			playlist_id: query.playlist_id === undefined || query.playlist_id.trim() === 'null' ?  null : query.playlist_id.trim(),
+			snapshot_id: query.snapshot_id === undefined || query.snapshot_id.trim() === 'null' ?  null : query.snapshot_id.trim()
+		}
+		
+		if (requestParams.playlist_id === null) {
+			isValid = false
+			reason += 'playlist_id ID missing. '
+		}
 
+		break
+		
+	case 'playlists':
+		requestParams = {
+			...requestParams,
+			user_id: query.user_id.trim() === '' ? false : query.user_id.trim(),
+			offset: parseInt(query.offset.trim()),
+			retrieve_user_data: query.retrieve.trim() === 'true' ? true : query.retrieve.trim() === 'false' ? false : 'invalid',
+		}
+
+		if (requestParams.user_id === false) {
+			isValid = false
+			reason += 'User ID missing. '
+		}
+		
+		break
+	}
+
+	console.log('REQUEST PARAMS:::::', requestParams) 
 
 	if (!isValid) {
 		res.status(400)
@@ -204,20 +202,24 @@ app.get('/retrieve', (req, res) => {
 			reason
 		})
 		res.send()
+		console.log('Bad request, reason:', reason)
+		return
 	}
 
 	if (!requestParams.logged) GuestWrapper.setUserId(requestParams.user_id)
-
+	else {
+		// TODO Handle logged user
+	}
 
 	retrieveRedirect(res, requestParams)
 })
 
 
 //TOKEN Used only on guests, else using API Wrapper
-function retrieveRedirect(res, data) {
-	let CurrentWrapper
+function retrieveRedirect(res, data) {			
+	let CurrentWrapper	
 
-	if (data.logged) { CurrentWrapper = Wrapper }
+	if (data.logged && data.logged !== 'invalid') { CurrentWrapper = Wrapper }
 	else { CurrentWrapper = GuestWrapper }
 
 	switch (data.retrieve) {
@@ -262,24 +264,9 @@ function retrieveRedirect(res, data) {
 			})
 			.catch( error => {
 				console.log('Error when retrieving PL Data from GetPlaylistData: ', error)
-				res.json({playlist: null, request: data})
-			})
-		break
-
-		//TODO
-	case 'youtube_convert':
-		SBFETCH.SearchTrackOnYT(data.track)
-			.then(track => {
-				// console.log('YEYY', track)
-				// console.log(util.inspect(track, {showHidden: false, depth: null}))
-				let obj = {
-					items: track.initial.items
-				}
-				console.log('about to send:: ', obj)
-				res.json(obj)
-			})
-			.catch(error => {
-				console.log('NOOO', error)
+				res.status(error.status)
+				res.send()
+				// res.json({playlist: null, error, request: data})
 			})
 		break
 

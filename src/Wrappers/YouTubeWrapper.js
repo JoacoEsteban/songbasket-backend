@@ -221,7 +221,7 @@ function YoutubizeFunction (playlists, token) {
 								reject({reason: 'quota', retrieved: devolver, retry})
 							}
 						} else {
-							console.log('ERRORRRRR ON YTQUERY:::', err)
+							console.log('ERRORRRRR ON YTQUERY. TRACK:::', track, 'ERROR::', err)
 							reject({reason: 'else', err})
 						}
 					})
@@ -233,11 +233,17 @@ function YoutubizeFunction (playlists, token) {
 
 // Track object has query and duration included
 function ytQuery ({query, duration}, token) {
+	// query = unscapeChars(query)
 	return new Promise((resolve, reject) => {
-		request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&key=${token}`, {}, (error, response) => {
-			let resp = JSON.parse(response.body)	
-			if(resp.error) reject(resp.error)    
-			else resolve(resp)
+		let reqUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&safeSearch=none&type=video&videoDuration=${duration}&key=${token}`
+		request(reqUrl, {}, (error, response) => {
+			if (error) {
+				reject(error)
+			} else { 
+				let resp = JSON.parse(response.body)	
+				if(resp.error) reject(resp.error)    
+				else resolve(resp)
+			}
 		})
 	})
 }

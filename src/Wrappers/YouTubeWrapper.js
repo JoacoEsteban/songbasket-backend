@@ -135,7 +135,7 @@ function YoutubizeFunction (playlists, token) {
 								
 								// BestMatch based on difference in video length
 								let bestMatch = ytQueries[calculateBestMatch(trackDurationDifference)].id
-								devolver[PLAYLISTS_INDEX].tracks.push({id: track.id, yt: ytQueries, bestMatch})
+								devolver[PLAYLISTS_INDEX].tracks.push({id: track.id, yt: ytQueries, bestMatch, selected: bestMatch})
 
 								// Track done. Removing it from control array
 								plControl --

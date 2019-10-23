@@ -131,15 +131,14 @@ app.get('/fail', (req, res) => {
 })
 
 app.post('/youtubize', (req, res) => {
-	let playlists = JSON.parse(req.body.playlists)
-	console.log(playlists)
-	YouTubeWrapper.Youtubize(playlists, [])
+	let track = JSON.parse(req.body.track)
+	console.log(track)
+	YouTubeWrapper.Youtubize(track)
 		.then(conclusion => {
-			console.log('Terminamo', conclusion[0].tracks)
+			console.log('Terminamo', conclusion)
 			res.json(conclusion)
 		})
 		.catch(err => console.log(err))
-
 })
 
 

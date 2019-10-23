@@ -4,19 +4,25 @@ var request = require('request')
 
 module.exports = {
 	YouTubeAPI: function ({ access_tokens }) {
-		this.access_tokens = access_tokens
+		this.access_tokens = access_tokens.map(token => {
+			return {
+				token,
+				uses: 0,
+				lastUsed: null
+			}
+		})
 		this.current_access_token = {
-			token: this.access_tokens[0],
+			token: this.access_tokens[0].token,
 			index: 0
 		}
 		
 		// Sets token from array of tokens. Just pass the index
 		this.setCurrentAccessToken = (index) => {
 			this.current_access_token = {
-				token: this.access_tokens[index],
+				token: this.access_tokens[index].token,
 				index
 			}
-			console.log('ACCESS TOKEN SET::: ' + this.current_access_token)
+			console.log('ACCESS TOKEN SET::: ' + this.current_access_token.token)
 		}
 		// Checks the next token exists and sets it
 		this.cycleAccessToken = () => {
@@ -28,9 +34,17 @@ module.exports = {
 				console.log('CYCLING ACCESS TOKEN: Coming back to first access_token::')
 				this.setCurrentAccessToken(0)
 			}
+			// TODO manage unusable tokens
+			return true
 		}
 
-		this.Youtubize = (playlists, accumulated) => {
+		// TODO Link this with code
+		this.accessTokenUsed = () => {
+			this.access_tokens[this.current_access_token.index].uses++
+			this.access_tokens[this.current_access_token.index].lastUsed = new Date()
+		}
+
+		this.YoutubizeOld = (playlists, accumulated) => {
 			let devolver = [...accumulated]
 			console.log('DOUUUUU::', this.giveMe.current_access_token())
 			return new Promise((resolve, reject) => {
@@ -62,7 +76,7 @@ module.exports = {
 							}
 
 							this.cycleAccessToken()
-							this.Youtubize(retry, devolver)
+							this.YoutubizeOld(retry, devolver)
 								.then(tracks => resolve(tracks))
 								.catch(err => reject(err))
 
@@ -75,10 +89,95 @@ module.exports = {
 			current_access_token: () => this.current_access_token.token,
 		}
 
+		this.Youtubize = (track) => {
+			return new Promise((resolve, reject) => {
+				handleYtQuery(track, this.giveMe.current_access_token)
+				.then(track => resolve(track))
+				.catch(err => reject(err))				
+			})
+		}
+
 		return this
 	}
 }
 
+let handleYtQuery = (track, tokenFunction) =>{
+	let repeatDetails = (videoIds, resolve, reject, tokenFunction, track, ytQueries) => {
+		handleYtDetails(videoIds, track, tokenFunction(), ytQueries)
+		.then(track => resolve(track))
+		.catch(err => {
+			if(err.code === 403 && this.cycleAccessToken()) repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
+			else reject(err)
+		})
+	}
+
+	let repeatQueries = (track, resolve, reject, tokenFunction) => {
+		console.log('A VER A VER A VER ', tokenFunction)
+		ytQuery(track, tokenFunction())
+		.then(resp => {
+			let q = resp.items
+			// All 5 results
+			let ytQueries = q.map(res => {
+				return { id: res.id.videoId, snippet: res.snippet }
+			})
+			
+			//Setting up videoIds in order to get details of videos
+			let videoIds = ''
+			ytQueries.forEach(vid => videoIds += vid.id + ',')
+			videoIds = videoIds.substring(0, videoIds.length - 1)
+
+			repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
+		})
+		.catch(err => {
+			if(err.code === 403 && this.cycleAccessToken()) repeatQueries(videoIds, resolve, reject, tokenFunction)
+			else reject(err)
+		})
+	}
+
+	return new Promise((resolve, reject) => {
+		repeatQueries(track, resolve, reject, tokenFunction)
+	})
+}
+
+let handleYtDetails = (videoIds, track, token, ytQueries) => {
+	return new Promise((resolve, reject) => {
+		ytGetVideoDetails(videoIds, token)
+		.then(results => {
+			let trackDurations = results.items.map(t => parseDuration(t.contentDetails.duration) )
+			
+			// difference in duration respective to spotify track
+			let trackDurationDifference = trackDurations.map(t => {
+				let vidDuration = t - track.duration_s
+				return vidDuration > 0 ? vidDuration : vidDuration * -1
+			})
+			
+			// Sets each video duration to have it at frontend
+			ytQueries = ytQueries.map((q, index) => {
+				return {...q, duration: trackDurations[index]}
+			})
+			
+			// BestMatch based on difference in video length
+			let bestMatch = ytQueries[calculateBestMatch(trackDurationDifference)].id
+			resolve({id: track.id, yt: ytQueries, bestMatch, selected: bestMatch})
+		})
+		.catch(err => {
+			// Quota exceeded
+			if(err.code === 403) {
+				failed = {
+					val: true,
+					cont: failed.cont + 1
+				}
+				
+				console.log('QUOTA EXCEEDED', failed.cont, plControl)
+				reject({reason: 'quota', retrieved: devolver, retry})
+			} else {
+				console.log('ERROR WHEN GETTING VIDEO DURATIONS:::', err)
+				reject({reason: 'else', err})
+			}
+			
+		})
+	})
+}
 
 function YoutubizeFunction (playlists, token) {
 	// Copy of playlists. Splices a track when completed so the array will be empty when all tracks have been retrieved

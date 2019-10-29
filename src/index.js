@@ -46,6 +46,12 @@ app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 app.listen(PORT, () => console.log(`Listening on ${PORT}`))
 
+const letsEncryptReponse = process.env.CERTBOT_RESPONSE;
+
+app.get('/.well-known/acme-challenge/:content', function(req, res) {
+  res.send(letsEncryptReponse);
+})
+
 //USER NOT REGISTERED Redirect to Login URL
 app.get('/init', (req, res) => res.redirect(301, SPOTIFY_LOGIN_URL))
 

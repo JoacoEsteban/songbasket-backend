@@ -1,3 +1,8 @@
+require('dotenv-flow').config()
+if (process.env.YOUTUBE_API_KEYS === '') {
+	console.error('YOUTUBE API KEYS MISSING FROM .env FILE')
+	return
+}
 const express = require('express')
 const path = require('path')
 const PORT = process.env.PORT || 5000
@@ -8,13 +13,11 @@ app.use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
 
 const { SpotifyAPI } = require('./Wrappers/SpotiWrapper')
 const { YouTubeAPI } = require('./Wrappers/YouTubeWrapper')
-// const { Nexus } = require('./Nexus')
 
 var { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, BACKEND, REDIRECT_URI } = require('./CONNECTION_DATA')
 const { DB } = require('./DB')
 const { SBFETCH } = require('./SBFETCH')
 const { logme } = require('./logme')
-
 
 var Wrapper = new SpotifyAPI({
 	client_id: CLIENT_ID,
@@ -29,7 +32,7 @@ var GuestWrapper = new SpotifyAPI({
 })
 
 var YouTubeWrapper = new YouTubeAPI({
-	access_tokens: ['AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o', 'AIzaSyDK_c1IaYKriY4PUh5kzgcrhdfupPBX9JA', 'AIzaSyBVaGqSXyqgqMHSSdo-QhWXLhsBgIFMw_M', 'AIzaSyBq4eThlAmqH4bkRYTtDUGZUMuFFIiZ6v0']
+	access_tokens: process.env.YOUTUBE_API_KEYS.split(',')
 })
 
 // Gets Client Credentials Token and sets a timeout
@@ -45,12 +48,6 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 app.listen(PORT, () => console.log(`Listening on ${PORT}`))
-
-const letsEncryptReponse = process.env.CERTBOT_RESPONSE;
-
-app.get('/.well-known/acme-challenge/:content', function(req, res) {
-  res.send(letsEncryptReponse);
-})
 
 //USER NOT REGISTERED Redirect to Login URL
 app.get('/init', (req, res) => res.redirect(301, SPOTIFY_LOGIN_URL))

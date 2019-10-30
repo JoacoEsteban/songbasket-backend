@@ -91,7 +91,7 @@ module.exports = {
 
 		this.Youtubize = (track) => {
 			return new Promise((resolve, reject) => {
-				handleYtQuery(track, this.giveMe.current_access_token)
+				handleYtQuery(track, { tokenFunction: this.giveMe.current_access_token, tokenCycle: this.cycleAccessToken })
 				.then(track => resolve(track))
 				.catch(err => reject(err))				
 			})
@@ -101,18 +101,17 @@ module.exports = {
 	}
 }
 
-let handleYtQuery = (track, tokenFunction) =>{
+let handleYtQuery = (track, {tokenFunction, tokenCycle}) =>{
 	let repeatDetails = (videoIds, resolve, reject, tokenFunction, track, ytQueries) => {
 		handleYtDetails(videoIds, track, tokenFunction(), ytQueries)
 		.then(track => resolve(track))
 		.catch(err => {
-			if(err.code === 403 && this.cycleAccessToken()) repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
+			if(err.code === 403 && tokenCycle()) repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
 			else reject(err)
 		})
 	}
 
 	let repeatQueries = (track, resolve, reject, tokenFunction) => {
-		console.log('A VER A VER A VER ', tokenFunction)
 		ytQuery(track, tokenFunction())
 		.then(resp => {
 			let q = resp.items
@@ -129,7 +128,7 @@ let handleYtQuery = (track, tokenFunction) =>{
 			repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
 		})
 		.catch(err => {
-			if(err.code === 403 && this.cycleAccessToken()) repeatQueries(videoIds, resolve, reject, tokenFunction)
+			if(err.code === 403 && tokenCycle()) repeatQueries(track, resolve, reject, tokenFunction)
 			else reject(err)
 		})
 	}

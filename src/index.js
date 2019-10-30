@@ -1,12 +1,8 @@
 require('dotenv-flow').config()
-if (process.env.YOUTUBE_API_KEYS === '') {
-	console.error('YOUTUBE API KEYS MISSING FROM .env FILE')
-	return
-}
 const express = require('express')
 const path = require('path')
 const PORT = process.env.PORT || 5000
-var bodyParser = require('body-parser')
+let bodyParser = require('body-parser')
 const app = express()
 app.use(bodyParser.json()) // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
@@ -14,25 +10,26 @@ app.use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
 const { SpotifyAPI } = require('./Wrappers/SpotiWrapper')
 const { YouTubeAPI } = require('./Wrappers/YouTubeWrapper')
 
-var { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, BACKEND, REDIRECT_URI } = require('./CONNECTION_DATA')
+let { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, YOUTUBE_API_KEYS, BACKEND, REDIRECT_URI } = require('./CONNECTION_DATA')
+if (YOUTUBE_API_KEYS.length === 0 || CLIENT_SECRET === '') return console.error('YOUTUBE API KEYS OR SPOTIFY CLIENT SECRET MISSING FROM .env FILE')
 const { DB } = require('./DB')
 const { SBFETCH } = require('./SBFETCH')
 const { logme } = require('./logme')
 
-var Wrapper = new SpotifyAPI({
+let Wrapper = new SpotifyAPI({
 	client_id: CLIENT_ID,
 	client_secret: CLIENT_SECRET,
 	redirect_uri: REDIRECT_URI
 })
 
-var GuestWrapper = new SpotifyAPI({
+let GuestWrapper = new SpotifyAPI({
 	client_id: CLIENT_ID,
 	client_secret: CLIENT_SECRET,
 	logged: false
 })
 
-var YouTubeWrapper = new YouTubeAPI({
-	access_tokens: process.env.YOUTUBE_API_KEYS.split(',')
+let YouTubeWrapper = new YouTubeAPI({
+	access_tokens: YOUTUBE_API_KEYS
 })
 
 // Gets Client Credentials Token and sets a timeout

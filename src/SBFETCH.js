@@ -78,55 +78,6 @@ module.exports = {
 					}
 				})
 			})
-		},
-
-		// TODO Remove from here
-		Youtubize: function (tracks) {
-			console.log('LENGHT', tracks.length)
-			let totalNumberOfTracks = 0
-			let currentCountOfTracks = 0
-			let devolver = []
-
-			return new Promise((resolve, reject) => {
-				for(let i = 0; i < tracks.length; i++) {
-					let pl = tracks[i]
-					devolver = [...devolver, {id: pl.id, tracks: []}]
-
-					for(let o = 0; o < pl.tracks.length; o++) {
-						totalNumberOfTracks++
-						let track = pl.tracks[o]
-						
-						ytQuery(track)
-							.then(resp => {
-								console.log(resp)
-								let q = resp.items[0]
-								devolver[i].tracks.push({id: track.id, yt: {
-									id: q.id.videoId,
-									snippet: q.snippet
-								}})
-
-								currentCountOfTracks++
-								if (currentCountOfTracks === totalNumberOfTracks){
-									resolve(devolver)
-								}
-							})
-							.catch(err => reject(err))
-                    
-					}
-				}
-			})
-            
 		}
-
 	}
 }
-// TODO And remove this
-function ytQuery ({query, duration}) {
-	return new Promise((resolve, reject) => {
-		request(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${query}&safeSearch=none&type=video&videoDuration=${duration}&key=AIzaSyDAuJhKAP2HvSkYEwnLnN2_St6z8f04v-o`, {}, (error, response) => {
-			if(error !== null) reject(error)    
-			else resolve(JSON.parse(response.body))
-		})
-	})
-}
-

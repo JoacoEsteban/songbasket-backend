@@ -130,6 +130,7 @@ app.get('/fail', (req, res) => {
 	res.render('pages/access_denied', { url: SPOTIFY_LOGIN_URL })
 })
 
+// Post due to query weight limits
 app.post('/youtubize', (req, res) => {
 	let track = JSON.parse(req.body.track)
 	console.log(track)
@@ -141,7 +142,23 @@ app.post('/youtubize', (req, res) => {
 		.catch(err => console.log(err))
 })
 
+app.get('/yt_details', (req, res) => {
+	let {ytId} = req.query
+	console.log('getting youtube details from ', ytId)
+	let result = (/(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9]{11})/).exec(ytId)
+	if (result === null) {
+		let reason = 'Invalid YouTube Url or ID'
+		console.error(reason)
+		res.status(400)
+		return res.json({error: true, reason})
+	}
 
+	YouTubeWrapper.getDetails(result[2])
+	.then(response => {
+		console.log('dou, a ver', response)
+		res.send(response)
+	})
+})
 
 app.get('/retrieve', (req, res) => {
 	let query = req.query

@@ -60,11 +60,11 @@ module.exports = {
 			return new Promise((resolve, reject) => {
 				ytGetVideoDetails(id, this.giveMe.current_access_token(), true)
 				.then(results => {
-					console.log(results)
-					resolve({...results.items[0], id, duration: parseDuration(results.items[0].contentDetails.duration)})
+					if (results.items.length === 0) throw new Error('not found')
+					resolve({snippet: results.items[0].snippet, id, duration: parseDuration(results.items[0].contentDetails.duration)})
 				})
 				.catch(err => {
-					console.error(err)
+					reject(err)
 				})
 			})
 		}

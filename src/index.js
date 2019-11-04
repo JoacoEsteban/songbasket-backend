@@ -145,7 +145,7 @@ app.post('/youtubize', (req, res) => {
 app.get('/yt_details', (req, res) => {
 	let {ytId} = req.query
 	console.log('getting youtube details from ', ytId)
-	let result = (/(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9]{11})/).exec(ytId)
+	let result = (/(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9-_]{11})/).exec(ytId)
 	if (result === null) {
 		let reason = 'Invalid YouTube Url or ID'
 		console.error(reason)
@@ -155,8 +155,12 @@ app.get('/yt_details', (req, res) => {
 
 	YouTubeWrapper.getDetails(result[2])
 	.then(response => {
-		console.log('dou, a ver', response)
+		console.log('details Retrieved')
 		res.send(response)
+	})
+	.catch(err => {
+		res.status(400)
+		res.json({error: true, reason: err})
 	})
 })
 

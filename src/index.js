@@ -154,14 +154,14 @@ app.get('/yt_details', (req, res) => {
 	}
 
 	YouTubeWrapper.getDetails(result[2])
-	.then(response => {
-		console.log('details Retrieved')
-		res.send(response)
-	})
-	.catch(err => {
-		res.status(400)
-		res.json({error: true, reason: err})
-	})
+		.then(response => {
+			console.log('details Retrieved')
+			res.send(response)
+		})
+		.catch(err => {
+			res.status(400)
+			res.json({error: true, reason: err})
+		})
 })
 
 app.get('/retrieve', (req, res) => {
@@ -230,8 +230,8 @@ app.get('/retrieve', (req, res) => {
 	else {
 		// TODO Handle logged user
 	}
-
-	retrieveRedirect(res, requestParams)
+	let data = requestParams
+	retrieveRedirect(res, data)
 })
 
 
@@ -247,6 +247,7 @@ function retrieveRedirect(res, data) {
 		SBFETCH.GetUserPlaylists(data, CurrentWrapper.giveMe.access_token())
 			.then(playlists => {
 				if (data.retrieve_user_data) {
+					GuestWrapper.setUserId(data.user_id)
 					CurrentWrapper.giveMe.user()
 						.then(user => {
 							res.json({ playlists, user, request: data, code: 200 })

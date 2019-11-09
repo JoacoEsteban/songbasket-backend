@@ -51,21 +51,21 @@ module.exports = {
 		this.Youtubize = (track) => {
 			return new Promise((resolve, reject) => {
 				handleYtQuery(track, { tokenFunction: this.giveMe.current_access_token, tokenCycle: this.cycleAccessToken })
-				.then(track => resolve(track))
-				.catch(err => reject(err))				
+					.then(track => resolve(track))
+					.catch(err => reject(err))				
 			})
 		}
 		
 		this.getDetails = (id) => {
 			return new Promise((resolve, reject) => {
 				ytGetVideoDetails(id, this.giveMe.current_access_token(), true)
-				.then(results => {
-					if (results.items.length === 0) throw new Error('not found')
-					resolve({snippet: results.items[0].snippet, id, duration: parseDuration(results.items[0].contentDetails.duration)})
-				})
-				.catch(err => {
-					reject(err)
-				})
+					.then(results => {
+						if (results.items.length === 0) throw new Error('not found')
+						resolve({snippet: results.items[0].snippet, id, duration: parseDuration(results.items[0].contentDetails.duration)})
+					})
+					.catch(err => {
+						reject(err)
+					})
 			})
 		}
 
@@ -76,33 +76,33 @@ module.exports = {
 let handleYtQuery = (track, {tokenFunction, tokenCycle}) =>{
 	let repeatDetails = (videoIds, resolve, reject, tokenFunction, track, ytQueries) => {
 		handleYtDetails(videoIds, track, tokenFunction(), ytQueries)
-		.then(track => resolve(track))
-		.catch(err => {
-			if(err.code === 403 && tokenCycle()) repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
-			else reject(err)
-		})
+			.then(track => resolve(track))
+			.catch(err => {
+				if(err.code === 403 && tokenCycle()) repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
+				else reject(err)
+			})
 	}
 
 	let repeatQueries = (track, resolve, reject, tokenFunction) => {
 		ytQuery(track, tokenFunction())
-		.then(resp => {
-			let q = resp.items
-			// All 5 results
-			let ytQueries = q.map(res => {
-				return { id: res.id.videoId, snippet: res.snippet }
-			})
+			.then(resp => {
+				let q = resp.items
+				// All 5 results
+				let ytQueries = q.map(res => {
+					return { id: res.id.videoId, snippet: res.snippet }
+				})
 			
-			//Setting up videoIds in order to get details of videos
-			let videoIds = ''
-			ytQueries.forEach(vid => videoIds += vid.id + ',')
-			videoIds = videoIds.substring(0, videoIds.length - 1)
+				//Setting up videoIds in order to get details of videos
+				let videoIds = ''
+				ytQueries.forEach(vid => videoIds += vid.id + ',')
+				videoIds = videoIds.substring(0, videoIds.length - 1)
 
-			repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
-		})
-		.catch(err => {
-			if(err.code === 403 && tokenCycle()) repeatQueries(track, resolve, reject, tokenFunction)
-			else reject(err)
-		})
+				repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
+			})
+			.catch(err => {
+				if(err.code === 403 && tokenCycle()) repeatQueries(track, resolve, reject, tokenFunction)
+				else reject(err)
+			})
 	}
 
 	return new Promise((resolve, reject) => {
@@ -113,40 +113,40 @@ let handleYtQuery = (track, {tokenFunction, tokenCycle}) =>{
 let handleYtDetails = (videoIds, track, token, ytQueries) => {
 	return new Promise((resolve, reject) => {
 		ytGetVideoDetails(videoIds, token)
-		.then(results => {
-			let trackDurations = results.items.map(t => parseDuration(t.contentDetails.duration) )
+			.then(results => {
+				let trackDurations = results.items.map(t => parseDuration(t.contentDetails.duration) )
 			
-			// difference in duration respective to spotify track
-			let trackDurationDifference = trackDurations.map(t => {
-				let vidDuration = t - track.duration_s
-				return vidDuration > 0 ? vidDuration : vidDuration * -1
+				// difference in duration respective to spotify track
+				let trackDurationDifference = trackDurations.map(t => {
+					let vidDuration = t - track.duration_s
+					return vidDuration > 0 ? vidDuration : vidDuration * -1
+				})
+			
+				// Sets each video duration to have it at frontend
+				ytQueries = ytQueries.map((q, index) => {
+					return {...q, duration: trackDurations[index]}
+				})
+			
+				// BestMatch based on difference in video length
+				let bestMatch = ytQueries[calculateBestMatch(trackDurationDifference)].id
+				resolve({id: track.id, yt: ytQueries, bestMatch})
 			})
-			
-			// Sets each video duration to have it at frontend
-			ytQueries = ytQueries.map((q, index) => {
-				return {...q, duration: trackDurations[index]}
-			})
-			
-			// BestMatch based on difference in video length
-			let bestMatch = ytQueries[calculateBestMatch(trackDurationDifference)].id
-			resolve({id: track.id, yt: ytQueries, bestMatch})
-		})
-		.catch(err => {
+			.catch(err => {
 			// Quota exceeded
-			if(err.code === 403) {
-				failed = {
-					val: true,
-					cont: failed.cont + 1
-				}
+				if(err.code === 403) {
+					failed = {
+						val: true,
+						cont: failed.cont + 1
+					}
 				
-				console.error('QUOTA EXCEEDED', failed.cont, plControl)
-				reject({reason: 'quota', retrieved: devolver, retry})
-			} else {
-				console.error('ERROR WHEN GETTING VIDEO DURATIONS:::', err)
-				reject({reason: 'else', err})
-			}
+					console.error('QUOTA EXCEEDED', failed.cont, plControl)
+					reject({reason: 'quota', retrieved: devolver, retry})
+				} else {
+					console.error('ERROR WHEN GETTING VIDEO DURATIONS:::', err)
+					reject({reason: 'else', err})
+				}
 			
-		})
+			})
 	})
 }
 

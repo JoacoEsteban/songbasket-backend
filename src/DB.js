@@ -2,13 +2,15 @@
 const knex = require('knex')({
   client: 'postgres',
   connection: {
-    host: process.env.DATABASE_URL,
+    host: (process.env.PRODUCTION ? `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}` : process.env.DATABASE_URL),
     user: 'postgres',
     password: process.env.DATABASE_PASSWORD,
     database: 'songbasket_db',
     charset: 'utf8'
   }
 })
+
+knex.client.pool.createRetryIntervalMillis = 500
 const db = require('bookshelf')(knex)
 
 // Defining models

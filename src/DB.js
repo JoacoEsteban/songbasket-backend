@@ -12,6 +12,9 @@ const knex = require('knex')({
 const db = require('bookshelf')(knex)
 
 // Defining models
+const YoutubeCustomTracks = db.model('YoutubeCustomTracks', {
+  tableName: 'youtube_custom_tracks'
+})
 const YoutubeTracks = db.model('YoutubeTracks', {
   tableName: 'youtube_tracks'
 })
@@ -21,6 +24,26 @@ const SpotifyTracks = db.model('SpotifyTracks', {
 const Relations = db.model('Relations', {
   tableName: 'conversion_relations'
 })
+
+const custom = {
+  getById(youtube_id) {
+    return new Promise((resolve, reject) => {
+      YoutubeCustomTracks.query({ where: { youtube_id } })
+        .fetch()
+        .then(res => {
+          let {duration, snippet, youtube_id} = res.attributes
+          resolve({id: youtube_id, duration, snippet})
+        })
+        .catch(err => {
+          if (err.message === 'EmptyResponse') resolve(false)
+          reject(err)
+        })
+    })
+  },
+  addReg(youtube_id, snippet, duration) {
+    return YoutubeCustomTracks.forge({ youtube_id, snippet: JSON.stringify(snippet), duration }).save()
+  }
+}
 
 const yt = {
   getById(youtube_id) {
@@ -101,7 +124,8 @@ const rel = {
 }
 
 module.exports = {
-  DB: rel
+  DB: rel,
+  CUSTOM: custom
 }
 
 

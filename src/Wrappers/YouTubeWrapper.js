@@ -57,15 +57,22 @@ module.exports = {
 		}
 		
 		this.getDetails = (id) => {
-			return new Promise((resolve, reject) => {
+			let repeatDetails = (id, resolve, reject) => {
 				ytGetVideoDetails(id, this.giveMe.current_access_token(), true)
-					.then(results => {
-						if (results.items.length === 0) throw new Error('not found')
-						resolve({snippet: results.items[0].snippet, id, duration: parseDuration(results.items[0].contentDetails.duration)})
-					})
-					.catch(err => {
-						reject(err)
-					})
+				.then(results => {
+          console.log(results)
+					if (results.error) throw results.error 
+					if (results.items.length === 0) throw new Error('not found')
+					resolve({snippet: results.items[0].snippet, id, duration: parseDuration(results.items[0].contentDetails.duration)})
+				})
+				.catch(err => {
+					if(err.code === 403 && this.cycleAccessToken()) repeatDetails(id, resolve, reject)
+					else reject(err)
+				})
+			}
+		
+			return new Promise((resolve, reject) => {
+				repeatDetails(id, resolve, reject)
 			})
 		}
 
@@ -170,7 +177,8 @@ function ytQuery ({query, duration}, token) {
 
 function ytGetVideoDetails (ids, token, allDetails) {
 	return new Promise((resolve, reject) => {
-		request(`https://www.googleapis.com/youtube/v3/videos?part=${allDetails ? 'snippet, contentDetails' : 'contentDetails'}&id=${ids}&key=${token}`, {}, (error, response) => {
+    let url = `https://www.googleapis.com/youtube/v3/videos?part=${allDetails ? 'snippet, contentDetails' : 'contentDetails'}&id=${ids}&key=${token}`
+		request(url, {}, (error, response) => {
 			if(error !== null) reject(error)    
 			else resolve(JSON.parse(response.body))
 		})

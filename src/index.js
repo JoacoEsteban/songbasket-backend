@@ -12,7 +12,7 @@ const { YouTubeAPI } = require('./Wrappers/YouTubeWrapper')
 
 let { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, YOUTUBE_API_KEYS, BACKEND, REDIRECT_URI } = require('./CONNECTION_DATA')
 if (YOUTUBE_API_KEYS.length === 0 || CLIENT_SECRET === '') return console.error('YOUTUBE API KEYS OR SPOTIFY CLIENT SECRET MISSING FROM .env FILE')
-const { DB } = require('./DB')
+const { DB, CUSTOM } = require('./DB')
 const { SBFETCH } = require('./SBFETCH')
 const { logme } = require('./logme')
 
@@ -155,7 +155,7 @@ app.post('/youtubize', (req, res) => {
     })
 })
 
-app.get('/yt_details', (req, res) => {
+app.get('/yt_details', async (req, res) => {
   let { ytId } = req.query
   console.log('getting youtube details from ', ytId)
   let result = (/(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9-_]{11})/).exec(ytId)
@@ -165,16 +165,25 @@ app.get('/yt_details', (req, res) => {
     res.status(400)
     return res.json({ error: true, reason })
   }
-
-  YouTubeWrapper.getDetails(result[2])
+  let id = result[2]
+  let conversion = await CUSTOM.getById(id)
+  if (conversion === false) {
+    console.log('Custom track details not cached')
+    YouTubeWrapper.getDetails(id)
     .then(response => {
-      console.log('details Retrieved')
+      console.log('details Retrieved', response)
       res.send(response)
+      CUSTOM.addReg(response.id, response.snippet, response.duration)
     })
     .catch(err => {
+      console.error(err)
       res.status(400)
       res.json({ error: true, reason: err })
     })
+  } else {
+    console.log('details cached')
+    res.send(conversion)
+  }
 })
 
 app.get('/retrieve', (req, res) => {

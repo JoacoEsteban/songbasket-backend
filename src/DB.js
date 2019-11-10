@@ -129,7 +129,8 @@ module.exports = {
 }
 
 
-// yt.getById('2LClTly6E2s')
-//   .then(res => {
-//     console.log(res.attributes)
-//   })
+console.log('TESTING DB CONNECTION')
+SpotifyTracks.query()
+.then(res => {
+    console.log(res)
+  })

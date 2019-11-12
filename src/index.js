@@ -137,7 +137,7 @@ app.post('/youtubize', (req, res) => {
   DB.getAllFrom(track.id)
     .then(conversion => {
       if (conversion === false) {
-        console.log('Track not cached, retrieving', conversion)
+        console.log('Track not cached, retrieving', track.id)
         YouTubeWrapper.Youtubize(track)
           .then(conclusion => {
             console.log('Track Retrieved', conclusion)
@@ -149,7 +149,7 @@ app.post('/youtubize', (req, res) => {
           })
           .catch(err => console.error(err))
       } else {
-        console.log('Track was found in DataBase', conversion)
+        console.log('Track was found in DataBase')
         res.json(conversion)
       }
     })

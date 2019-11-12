@@ -69,6 +69,7 @@ const sp = {
     })
   },
   addReg(spotify_id, bestMatch) {
+    // TODO Fix duplicated yt registry cancelling this query
     return SpotifyTracks.forge({ spotify_id, best_match: bestMatch }).save()
   }
 }
@@ -84,11 +85,10 @@ const rel = {
     let conversion = []
     let ids = await Relations.query({ select: 'youtube_id', where: { spotify_id } }).fetchAll()
     ids = ids.models.map(r => r.attributes.youtube_id)
-    console.log('IDS', ids)
     let remaining = ids.length
     for (let i in ids) {
       let id = ids[i]
-      console.log('gettin', id)
+      // console.log('gettin', id)
       let trackie = await yt.getById(id)
       let {duration, snippet, youtube_id} = trackie.attributes
       conversion.push({id: youtube_id, duration, snippet})
@@ -129,10 +129,3 @@ module.exports = {
   DB: rel,
   CUSTOM: custom
 }
-
-
-console.log('TESTING DB CONNECTION')
-SpotifyTracks.query()
-.then(res => {
-    console.log(res)
-  })

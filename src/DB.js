@@ -89,39 +89,60 @@ const rel = {
     for (let i in ids) {
       let id = ids[i]
       // console.log('gettin', id)
-      let trackie = await yt.getById(id)
+      let trackie
+      try {
+        trackie = await yt.getById(id)
+      } catch (err) {
+        console.error('ERRORRRR AT getById line 95', id, err)
+      }
       let {duration, snippet, youtube_id} = trackie.attributes
       conversion.push({id: youtube_id, duration, snippet})
+      console.log('rem', remaining)
       if (--remaining === 0) return { id: spotify_id, bestMatch: track.best_match, yt: conversion }
     }
     
   },
-  addReg(spotify_id, youtube_id) {
-    return Relations.forge({ spotify_id, youtube_id }).save()
-  },
   insertAllFrom(spotify_id, results, bestMatch) {
     return new Promise(async (resolve, reject) => {
       let bmatch = results.find(res => res.id === bestMatch)
-      await yt.addReg(bmatch.id, bmatch.snippet, bmatch.duration)
-      await sp.addReg(spotify_id, bestMatch)
-      await this.addReg(spotify_id, bestMatch)
+      try {
+        await yt.addReg(bmatch.id, bmatch.snippet, bmatch.duration)
+      } catch (err) {
+        console.error('ERR WHILE ADDING BMATCH TO YT', bmatch.id, err)
+      }
+      try {
+        await sp.addReg(spotify_id, bmatch.id)
+      } catch (err) {
+        console.error('ERR WHILE ADDING BMATCH TO SP', spotify_id, bmatch.id, err)
+      }
+      try {
+        await this.addReg(spotify_id, bmatch.id)
+      } catch (err) {
+        console.error('ERR WHILE ADDING BMATCH TO REL', spotify_id, bmatch.id, err)
+      }
       // This three ops are executed first before bestMatch acts as a foreign key to spotify_tracks table
       // So the entry must exist in the youtube_tracks table before creating the other rows
-      results = results.filter(res => res.id !== bestMatch)
+      results = results.filter(res => res.id !== bmatch.id)
 
       let ammount = results.length
-      results.forEach(({ id, snippet, duration }) => {
-        yt.addReg(id, snippet, duration)
-          .then(() => {
-            this.addReg(spotify_id, id)
-              .then(() => {
-                if (--ammount === 0) resolve()
-              })
-              .catch(err => reject(err))
-          })
-          .catch(err => reject(err))
+      results.forEach(async ({ id, snippet, duration }) => {
+        try {
+          await yt.addReg(id, snippet, duration)
+        } catch (err) {
+          console.error('ERR WHEN ADDING TO YT', spotify_id, id, err)
+        }
+        
+        try {
+          await this.addReg(spotify_id, id)
+        } catch (err) {
+          console.error('ERR WHEN ADDING TO REL', spotify_id, id, err)
+        }
+        if (--ammount === 0) resolve()
       })
     })
+  },
+  addReg(spotify_id, youtube_id) {
+    return Relations.forge({ spotify_id, youtube_id }).save()
   }
 }
 

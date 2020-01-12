@@ -190,7 +190,7 @@ app.get('/retrieve', (req, res) => {
   let query = req.query
   let requestParams = {
     retrieve: query.retrieve,
-    logged: query.logged.trim() == 'true' ? true : false, //wheter it's a SB logged user
+    logged: query.logged && query.logged.trim() == 'true', //wheter it's a SB logged user
   }
   if (query.SBID) {
     requestParams.SBID = query.SBID.trim() === 'null' ? null : query.SBID.trim() //SB User ID
@@ -213,7 +213,7 @@ app.get('/retrieve', (req, res) => {
         snapshot_id: query.snapshot_id === undefined || query.snapshot_id.trim() === 'null' ? null : query.snapshot_id.trim()
       }
 
-      if (requestParams.playlist_id === null) {
+      if (!requestParams.playlist_id) {
         isValid = false
         reason += 'playlist_id ID missing. '
       }
@@ -224,7 +224,7 @@ app.get('/retrieve', (req, res) => {
       requestParams = {
         ...requestParams,
         user_id: query.user_id.trim() === '' ? false : query.user_id.trim(),
-        offset: parseInt(query.offset.trim()),
+        offset: query.offset ? parseInt(query.offset.trim()) : 0,
         retrieve_user_data: query.retrieve.trim() === 'true' ? true : query.retrieve.trim() === 'false' ? false : 'invalid',
       }
 
@@ -233,6 +233,10 @@ app.get('/retrieve', (req, res) => {
         reason += 'User ID missing. '
       }
 
+      break
+      default:
+        isValid = false
+        reason += 'No target provided'
       break
   }
 

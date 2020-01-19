@@ -14,6 +14,8 @@ let { CLIENT_ID, CLIENT_SECRET, SPOTIFY_LOGIN_URL, YOUTUBE_API_KEYS, BACKEND, RE
 if (YOUTUBE_API_KEYS.length === 0 || CLIENT_SECRET === '') return console.error('YOUTUBE API KEYS OR SPOTIFY CLIENT SECRET MISSING FROM .env FILE')
 const { DB, CUSTOM } = require('./DB')
 const { SBFETCH } = require('./SBFETCH')
+const { parseBool } = require('./utils')
+const regexValidation = require('./regexValidation')
 const { logme } = require('./logme')
 
 let Wrapper = new SpotifyAPI({
@@ -114,7 +116,7 @@ app.get('/guest_sign_in', (req, res) => {
     GuestWrapper.giveMe.user()
       .then(resp => {
         console.log('user:::::', resp)
-        resp.code = 200
+        resp.status = 200
         res.json(resp)
       })
       .catch(err => {
@@ -158,7 +160,8 @@ app.post('/youtubize', (req, res) => {
 app.get('/yt_details', async (req, res) => {
   let { ytId } = req.query
   console.log('getting youtube details from ', ytId)
-  let result = (/(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9-_]{11})/).exec(ytId)
+  // TODO Forbid multiple matches with "$" at the end of regex
+  let result = regexes.youtubeId.exec(ytId)
   if (result === null) {
     let reason = 'Invalid YouTube Url or ID'
     console.error(reason)
@@ -190,63 +193,67 @@ app.get('/retrieve', (req, res) => {
   let query = req.query
   let requestParams = {
     retrieve: query.retrieve,
-    logged: query.logged.trim() == 'true' ? true : false, //wheter it's a SB logged user
-  }
-  if (query.SBID) {
-    requestParams.SBID = query.SBID.trim() === 'null' ? null : query.SBID.trim() //SB User ID
+    logged: parseBool(query.logged), //wheter it's a SB logged user
   }
 
   //Request Validation
   var isValid = true
-  var reason = ''
-  if (requestParams.logged === true && requestParams.SBID === null) {
+  var reason = []
+  if (requestParams.logged && !query.SBID) {
     isValid = false
-    reason += 'SongBasket ID (SBID) missing.'
+    reason.push('SongBasket ID (SBID) missing')
+  } else {
+    switch (requestParams.retrieve) {
+      case 'playlist_tracks':
+        //in case of retrieving playlist tracks:
+        if (query.playlist_id && (query.playlist_id = query.playlist_id.trim()) !== 'undefined' && regexValidation.spotifyPlaylistId(query.playlist_id))  requestParams.playlist_id = query.playlist_id
+        else {
+          isValid = false
+          reason.push(query.playlist_id ? 'playlist_id malformatted' : 'playlist_id ID missing')
+        }
+
+        if (isValid && query.snapshot_id && (query.snapshot_id = query.snapshot_id.trim()) !== 'undefined') {
+          // Tests for snapshot_id validity
+          if (regexValidation.spotifySnapshotId(query.snapshot_id)) requestParams.snapshot_id = query.snapshot_id
+          else {
+            isValid = false
+            reason.push('snapshot_id ID malformatted')
+          }
+        }
+        break
+      case 'user_playlists':
+        if (query.user_id && (query.user_id = query.user_id.trim()) !== 'undefined' && regexValidation.spotifyUserId(query.user_id)) requestParams.user_id = query.user_id
+        else {
+          isValid = false
+          reason.push(query.user_id ? 'user_id malformatted' : 'user_id ID missing')
+        }
+        requestParams = {
+          ...requestParams,
+          offset: query.offset || 0,
+          retrieve_user_data: parseBool(query.retrieve_user_data)
+        }
+        break
+      default:
+        isValid = false
+        reason.push(requestParams.retrieve ? 'Unrecognized retrieve target "' + requestParams.retrieve + '"' : 'Retrieve target missing')
+        break
+    }
   }
 
-  switch (requestParams.retrieve) {
-    case 'playlist_tracks':
-      //in case of retrieving playlist tracks:
-      requestParams = {
-        ...requestParams,
-        playlist_id: query.playlist_id === undefined || query.playlist_id.trim() === 'null' ? null : query.playlist_id.trim(),
-        snapshot_id: query.snapshot_id === undefined || query.snapshot_id.trim() === 'null' ? null : query.snapshot_id.trim()
-      }
-
-      if (requestParams.playlist_id === null) {
-        isValid = false
-        reason += 'playlist_id ID missing. '
-      }
-
-      break
-
-    case 'playlists':
-      requestParams = {
-        ...requestParams,
-        user_id: query.user_id.trim() === '' ? false : query.user_id.trim(),
-        offset: parseInt(query.offset.trim()),
-        retrieve_user_data: query.retrieve.trim() === 'true' ? true : query.retrieve.trim() === 'false' ? false : 'invalid',
-      }
-
-      if (requestParams.user_id === false) {
-        isValid = false
-        reason += 'User ID missing. '
-      }
-
-      break
+  
+  if (!isValid) {
+    // reason = reason.join(', ')
+    console.log('Bad request, reason:', reason, 'params:', requestParams)
+    
+    res.status(400)
+    res.send({
+      status: 400,
+      reason
+    })
+    return
   }
 
   console.log('REQUEST PARAMS:::::', requestParams)
-
-  if (!isValid) {
-    res.status(400)
-    res.set({
-      reason
-    })
-    res.send()
-    console.log('Bad request, reason:', reason)
-    return
-  }
 
   if (!requestParams.logged) GuestWrapper.setUserId(requestParams.user_id)
   else {
@@ -265,19 +272,19 @@ function retrieveRedirect(res, data) {
   else { CurrentWrapper = GuestWrapper }
 
   switch (data.retrieve) {
-    case 'playlists':
+    case 'user_playlists':
       SBFETCH.GetUserPlaylists(data, CurrentWrapper.giveMe.access_token())
         .then(playlists => {
           if (data.retrieve_user_data) {
             GuestWrapper.setUserId(data.user_id)
             CurrentWrapper.giveMe.user()
               .then(user => {
-                res.json({ playlists, user, request: data, code: 200 })
+                res.json({ playlists, user, request: data, status: 200 })
               }, error => {
                 console.log(error)
                 res.json(error)
               })
-          } else res.json({ playlists, request: data, code: 200 })
+          } else res.json({ playlists, request: data, status: 200 })
         }
         )
 
@@ -308,7 +315,7 @@ function retrieveRedirect(res, data) {
         .catch(error => {
           console.log('Error when retrieving PL Data from GetPlaylistData: ', error)
           res.status(error.status)
-          res.send()
+          res.send(error)
           // res.json({playlist: null, error, request: data})
         })
       break

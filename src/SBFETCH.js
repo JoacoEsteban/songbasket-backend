@@ -14,18 +14,15 @@ module.exports = {
 			})
 		},
 		GetPlaylistData: function (playlist_id, access_token) {
+			console.log('a verrrrr', playlist_id)
 			return new Promise((resolve, reject) => {
-				if(playlist_id === null || playlist_id === undefined) {
-					reject('PLAYLIST ID NULL')
-				}else{
-					request(`https://api.spotify.com/v1/playlists/${playlist_id}/?fields=collaborative,description,external_urls,followers,href,id,images,name,owner,public,snapshot_id,tracks(!items),type,uri`,
-						{ headers: { Authorization: 'Bearer ' + access_token } }
-						,(algo, playlist) => {
-							playlist = JSON.parse(playlist.body)
-							if (playlist.error) reject(playlist.error)
-							resolve(playlist)
-						})
-				}
+				request(`https://api.spotify.com/v1/playlists/${playlist_id}/?fields=collaborative,description,external_urls,followers,href,id,images,name,owner,public,snapshot_id,tracks(!items),type,uri`,
+					{ headers: { Authorization: 'Bearer ' + access_token } }
+					,(algo, playlist) => {
+						playlist = JSON.parse(playlist.body)
+						if (playlist.error) reject(playlist.error)
+						resolve(playlist)
+					})
 			})
 		},
 		GetPlaylistTracks: function (playlist_id, tracksObject, offset, access_token) {

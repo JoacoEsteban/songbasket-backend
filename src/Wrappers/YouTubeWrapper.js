@@ -15,7 +15,7 @@ module.exports = {
 			token: this.access_tokens[0].token,
 			index: 0
 		}
-		
+
 		// Sets token from array of tokens. Just pass the index
 		this.setCurrentAccessToken = (index) => {
 			this.current_access_token = {
@@ -27,7 +27,7 @@ module.exports = {
 		// Checks the next token exists and sets it
 		this.cycleAccessToken = () => {
 			let index = this.current_access_token.index + 1
-			if(this.access_tokens[index]) {
+			if (this.access_tokens[index]) {
 				console.log('CYCLING ACCESS TOKEN: + 1::')
 				this.setCurrentAccessToken(index)
 			} else {
@@ -47,30 +47,30 @@ module.exports = {
 		this.giveMe = {
 			current_access_token: () => this.current_access_token.token,
 		}
-		
+
 		this.Youtubize = (track) => {
 			return new Promise((resolve, reject) => {
 				handleYtQuery(track, { tokenFunction: this.giveMe.current_access_token, tokenCycle: this.cycleAccessToken })
 					.then(track => resolve(track))
-					.catch(err => reject(err))				
+					.catch(err => reject(err))
 			})
 		}
-		
+
 		this.getDetails = (id) => {
 			let repeatDetails = (id, resolve, reject) => {
 				ytGetVideoDetails(id, this.giveMe.current_access_token(), true)
-				.then(results => {
-          console.log(results)
-					if (results.error) throw results.error 
-					if (results.items.length === 0) throw new Error('not found')
-					resolve({snippet: results.items[0].snippet, id, duration: parseDuration(results.items[0].contentDetails.duration)})
-				})
-				.catch(err => {
-					if(err.code === 403 && this.cycleAccessToken()) repeatDetails(id, resolve, reject)
-					else reject(err)
-				})
+					.then(results => {
+						console.log(results)
+						if (results.error) throw results.error
+						if (results.items.length === 0) throw new Error('not found')
+						resolve({ snippet: results.items[0].snippet, id, duration: parseDuration(results.items[0].contentDetails.duration) })
+					})
+					.catch(err => {
+						if (err.code === 403 && this.cycleAccessToken()) repeatDetails(id, resolve, reject)
+						else reject(err)
+					})
 			}
-		
+
 			return new Promise((resolve, reject) => {
 				repeatDetails(id, resolve, reject)
 			})
@@ -80,12 +80,12 @@ module.exports = {
 	}
 }
 
-let handleYtQuery = (track, {tokenFunction, tokenCycle}) =>{
+let handleYtQuery = (track, { tokenFunction, tokenCycle }) => {
 	let repeatDetails = (videoIds, resolve, reject, tokenFunction, track, ytQueries) => {
 		handleYtDetails(videoIds, track, tokenFunction(), ytQueries)
 			.then(track => resolve(track))
 			.catch(err => {
-				if(err.code === 403 && tokenCycle()) repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
+				if (err.code === 403 && tokenCycle()) repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
 				else reject(err)
 			})
 	}
@@ -98,7 +98,7 @@ let handleYtQuery = (track, {tokenFunction, tokenCycle}) =>{
 				let ytQueries = q.map(res => {
 					return { id: res.id.videoId, snippet: res.snippet }
 				})
-			
+
 				//Setting up videoIds in order to get details of videos
 				let videoIds = ''
 				ytQueries.forEach(vid => videoIds += vid.id + ',')
@@ -107,7 +107,7 @@ let handleYtQuery = (track, {tokenFunction, tokenCycle}) =>{
 				repeatDetails(videoIds, resolve, reject, tokenFunction, track, ytQueries)
 			})
 			.catch(err => {
-				if(err.code === 403 && tokenCycle()) repeatQueries(track, resolve, reject, tokenFunction)
+				if (err.code === 403 && tokenCycle()) repeatQueries(track, resolve, reject, tokenFunction)
 				else reject(err)
 			})
 	}
@@ -121,71 +121,71 @@ let handleYtDetails = (videoIds, track, token, ytQueries) => {
 	return new Promise((resolve, reject) => {
 		ytGetVideoDetails(videoIds, token)
 			.then(results => {
-				let trackDurations = results.items.map(t => parseDuration(t.contentDetails.duration) )
-			
+				let trackDurations = results.items.map(t => parseDuration(t.contentDetails.duration))
+
 				// difference in duration respective to spotify track
 				let trackDurationDifference = trackDurations.map(t => {
 					let vidDuration = t - track.duration_s
 					return vidDuration > 0 ? vidDuration : vidDuration * -1
 				})
-			
+
 				// Sets each video duration to have it at frontend
 				ytQueries = ytQueries.map((q, index) => {
-					return {...q, duration: trackDurations[index]}
+					return { ...q, duration: trackDurations[index] }
 				})
-			
+
 				// BestMatch based on difference in video length
 				let bestMatch = ytQueries[calculateBestMatch(trackDurationDifference)].id
-				resolve({id: track.id, yt: ytQueries, bestMatch})
+				resolve({ id: track.id, yt: ytQueries, bestMatch })
 			})
 			.catch(err => {
-			// Quota exceeded
-				if(err.code === 403) {
+				// Quota exceeded
+				if (err.code === 403) {
 					failed = {
 						val: true,
 						cont: failed.cont + 1
 					}
-				
+
 					console.error('QUOTA EXCEEDED', failed.cont, plControl)
-					reject({reason: 'quota', retrieved: devolver, retry})
+					reject({ reason: 'quota', retrieved: devolver, retry })
 				} else {
 					console.error('ERROR WHEN GETTING VIDEO DURATIONS:::', err)
-					reject({reason: 'else', err})
+					reject({ reason: 'else', err })
 				}
-			
+
 			})
 	})
 }
 
 
 // Track object has query and duration included
-function ytQuery ({query, duration}, token) {
+function ytQuery({ query, duration }, token) {
 	// query = unscapeChars(query)
 	return new Promise((resolve, reject) => {
 		let reqUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&safeSearch=none&type=video&videoDuration=${duration}&key=${token}`
 		request(reqUrl, {}, (error, response) => {
 			if (error) {
 				reject(error)
-			} else { 
-				let resp = JSON.parse(response.body)	
-				if(resp.error) reject(resp.error)    
+			} else {
+				let resp = JSON.parse(response.body)
+				if (resp.error) reject(resp.error)
 				else resolve(resp)
 			}
 		})
 	})
 }
 
-function ytGetVideoDetails (ids, token, allDetails) {
+function ytGetVideoDetails(ids, token, allDetails) {
 	return new Promise((resolve, reject) => {
-    let url = `https://www.googleapis.com/youtube/v3/videos?part=${allDetails ? 'snippet, contentDetails' : 'contentDetails'}&id=${ids}&key=${token}`
+		let url = `https://www.googleapis.com/youtube/v3/videos?part=${allDetails ? 'snippet, contentDetails' : 'contentDetails'}&id=${ids}&key=${token}`
 		request(url, {}, (error, response) => {
-			if(error !== null) reject(error)    
+			if (error !== null) reject(error)
 			else resolve(JSON.parse(response.body))
 		})
 	})
 }
 
-function parseDuration (PT) {
+function parseDuration(PT) {
 	var durationInSec = 0
 	var matches = PT.match(/P(?:(\d*)Y)?(?:(\d*)M)?(?:(\d*)W)?(?:(\d*)D)?T(?:(\d*)H)?(?:(\d*)M)?(?:(\d*)S)?/i)
 	var parts = [
@@ -218,21 +218,21 @@ function parseDuration (PT) {
 			multiplier: 1
 		}
 	]
-	
+
 	for (var i = 0; i < parts.length; i++) {
 		if (typeof matches[parts[i].pos] != 'undefined') {
 			durationInSec += parseInt(matches[parts[i].pos]) * parts[i].multiplier
 		}
 	}
-	
+
 	return durationInSec
 }
 
-function calculateBestMatch (durations) {
+function calculateBestMatch(durations) {
 	let bestMatch = 0
 	for (let i = 1; i < durations.length; i++) {
 		let dur = durations[i]
-		if(dur < durations[bestMatch]) bestMatch = i
+		if (dur < durations[bestMatch]) bestMatch = i
 	}
 	return bestMatch
 }

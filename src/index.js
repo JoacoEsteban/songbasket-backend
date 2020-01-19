@@ -155,6 +155,9 @@ app.post('/youtubize', (req, res) => {
         res.json(conversion)
       }
     })
+    .catch(error => {
+      console.error('ERROR WHEN CHECKING DB @index.js', error)
+    })
 })
 
 app.get('/yt_details', async (req, res) => {

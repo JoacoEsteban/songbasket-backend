@@ -129,7 +129,7 @@ const rel = {
         try {
           await yt.addReg(id, snippet, duration)
         } catch (err) {
-          console.error('ERR WHEN ADDING TO YT', spotify_id, id, err)
+          console.error('ERR WHEN ADDING TO YT', err)
         }
         
         try {

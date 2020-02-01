@@ -155,7 +155,7 @@ module.exports = {
 			logme('RETRIEVING CLIENT CREDENTIALS ACCESS TOKEN::::::::::')
 			this.clientCredentialsGrant().then(
 				(data) => {
-					logme('SUCCESS, NEW CC ACCESS TOKEN IS ' + data.access_token + ' ::::::::::')
+					logme('SUCCESS, NEW CC ACCESS TOKEN IS ' + data.access_token + ' ::::::::::' new Date())
 
 					// Save the access token so that it's used in future calls
 					this.setAccessToken(data.access_token)

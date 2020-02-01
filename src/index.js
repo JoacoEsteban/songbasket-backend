@@ -164,7 +164,7 @@ app.get('/yt_details', async (req, res) => {
   let { ytId } = req.query
   console.log('getting youtube details from ', ytId)
   // TODO Forbid multiple matches with "$" at the end of regex
-  let result = regexValidation.youtubeId.exec(ytId)
+  let result = regexValidation.youtubeVideoId.exec(ytId)
   if (result === null) {
     let reason = 'Invalid YouTube Url or ID'
     console.error(reason)

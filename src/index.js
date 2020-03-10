@@ -249,7 +249,7 @@ app.get('/retrieve', (req, res) => {
     console.log('Bad request, reason:', reason, 'params:', requestParams)
     
     res.status(400)
-    res.send({
+    res.error({
       status: 400,
       reason
     })

@@ -18,15 +18,15 @@ module.exports = {
 
     this.setAccessToken = (access_token) => {
       this.access_token = access_token
-      console.log('ACCESS TOKEN SET::: ' + this.access_token)
+      // console.log('ACCESS TOKEN SET::: ' + this.access_token, '\n\n')
     }
     this.setRefreshToken = (refresh_token) => {
       this.refresh_token = refresh_token
-      console.log('REFRESH TOKEN SET::: ' + this.refresh_token)
+      // console.log('REFRESH TOKEN SET::: ' + this.refresh_token, '\n\n')
     }
     this.setUserId = (user_id) => {
       this.user_id = user_id
-      console.log('USER ID SET::: ' + this.user_id)
+      // console.log('USER ID SET::: ' + this.user_id, '\n\n')
     }
 
 
@@ -46,8 +46,11 @@ module.exports = {
       //TODO Handle Errors
       return new Promise((resolve, reject) => {
         request(options, (error, response, body) => {
+          body = JSON.parse(body)
+          error = error || (body.error && body)
           if (error) return reject(error)
-          resolve(JSON.parse(body))
+          console.log(body)
+          resolve(body)
         })
       })
     }

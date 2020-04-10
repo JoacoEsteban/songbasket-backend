@@ -1,19 +1,24 @@
-// Setting up the database connection
-const knex = require('knex')({
+const uuid = require('uuid').v4
+
+const config = process.env.PRODUCTION ? {
   client: 'postgres',
   connection: {
-    host: (process.env.PRODUCTION ? `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}` : process.env.DATABASE_URL),
+    host: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
     user: 'postgres',
     password: process.env.DATABASE_PASSWORD,
     database: 'songbasket_db',
     charset: 'utf8'
   }
-})
+} : require('../../config/core.config').DB
 
+const knex = require('knex')(config)
 knex.client.pool.createRetryIntervalMillis = 500
-const db = require('bookshelf')(knex)
 
+const db = require('bookshelf')(knex)
 // Defining models
+const Users = db.model('Users', {
+  tableName: 'users'
+})
 const YoutubeCustomTracks = db.model('YoutubeCustomTracks', {
   tableName: 'youtube_custom_tracks'
 })
@@ -27,6 +32,61 @@ const Relations = db.model('Relations', {
   tableName: 'conversion_relations'
 })
 
+const auth = {
+  getUserBySpotifyId(spotify_id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const model = await Users.query({ where: { spotify_id } }).fetch()
+        resolve(model)
+      } catch (err) {
+        if (err.message === 'EmptyResponse') return resolve(false)
+        reject(err)
+      }
+    })
+  },
+  getUserBySongbasketId(songbasket_id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const model = await Users.query({ where: { songbasket_id } }).fetch()
+        resolve(model)
+      } catch (err) {
+        if (err.message === 'EmptyResponse') return resolve(false)
+        reject(err)
+      }
+    })
+  },
+  updateUserAccessTokenBySongbasketId({songbasket_id, access_token, token_expires_at}) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await Users.query({ where: { songbasket_id } }).save({ access_token, token_expires_at })
+        resolve()
+      } catch (err) {
+        reject(err)
+      }
+    })
+  },
+  createUser({ spotify_id, access_token, refresh_token, token_expires_at }) {
+    if (!spotify_id) throw new Error('SPOFITY ID MISSING WHEN CREATING USER')
+
+    return new Promise(async (resolve, reject) => {
+      const user = await this.getUserBySpotifyId(spotify_id)
+      if (user && user.attributes) {
+        console.log('USER EXISTS JAJAJAJ')
+        await Users.where({spotify_id}).save({access_token, refresh_token, token_expires_at}, {patch: true})
+        return resolve(user.attributes.songbasket_id)
+      }
+
+      const songbasket_id = (uuid()).replace(/\-/g, '')
+      try {
+        await Users.forge({songbasket_id, spotify_id, access_token, refresh_token, token_expires_at}).save()
+        resolve(songbasket_id)
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+}
+
 const custom = {
   getById(youtube_id) {
     return new Promise((resolve, reject) => {
@@ -37,7 +97,7 @@ const custom = {
           resolve({id: youtube_id, duration, snippet})
         })
         .catch(err => {
-          if (err.message === 'EmptyResponse') resolve(false)
+          if (err.message === 'EmptyResponse') return resolve(false)
           reject(err)
         })
     })
@@ -63,7 +123,7 @@ const sp = {
         .fetch()
         .then(res => resolve(res.attributes))
         .catch(err => {
-          if (err.message === 'EmptyResponse') resolve(false)
+          if (err.message === 'EmptyResponse') return resolve(false)
           reject(err)
         })
     })
@@ -148,5 +208,6 @@ const rel = {
 
 module.exports = {
   DB: rel,
-  CUSTOM: custom
+  CUSTOM: custom,
+  AUTH: auth
 }

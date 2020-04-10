@@ -1,67 +1,67 @@
 const helpers = require('../../helpers')
 const CREDS = helpers.CREDENTIALS.SPOTIFY
 const BACKEND = helpers.PATHS.api
+const DB = require('../DB')
 
-Wrapper = new require('./spotify.wrapper').SpotifyAPI({
+const Wrapper = new require('./spotify.wrapper').SpotifyAPI({
   client_id: CREDS.CLIENT_ID,
   client_secret: CREDS.CLIENT_SECRET,
   redirect_uri: CREDS.REDIRECT_URI
 })
 
-let GuestWrapper = new require('./spotify.wrapper').SpotifyAPI({
+const GuestWrapper = new require('./spotify.wrapper').SpotifyAPI({
   client_id: CREDS.CLIENT_ID,
   client_secret: CREDS.CLIENT_SECRET,
+  redirect_uri: CREDS.REDIRECT_URI,
   logged: false
 })
 
-// Gets Client Credentials Token and sets a timeout
 GuestWrapper.CCInit()
 const e = module.exports
 
-e.init = (req, res) => res.redirect(301, CREDS.SPOTIFY_LOGIN_URL)
+console.log(CREDS.SPOTIFY_LOGIN_URL)
+e.init = (req, res) => {
+  res.redirect(301, CREDS.SPOTIFY_LOGIN_URL)
+}
 
 e.authorize = async (req, res) => {
   const AUTH_CODE = req.query.code
-  logme(`Authorization Code: ${AUTH_CODE}`)
+  console.log(`Authorization Code: ${AUTH_CODE}`)
 
   if (!AUTH_CODE) return res.redirect(301, `${BACKEND}/fail`)
 
   try {
-    const { access_token, refresh_token } = await Wrapper.authorizationCodeGrant(AUTH_CODE) // gets new user credentials
+    const { access_token, refresh_token, expires_in } = await Wrapper.authorizationCodeGrant(AUTH_CODE) // gets new user credentials
 
-      //Updates user to be pushed to database
-      newUser.access_token = access_token
-      newUser.refresh_token = refresh_token
-      newUser.token_created_at = Date.now()
+    Wrapper.setAccessToken(access_token)
+    Wrapper.setRefreshToken(refresh_token)
+    const user_data = await Wrapper.getMe()
 
-      // Set the access token on the API object to use it in later calls
-      Wrapper.setAccessToken(newUser.access_token)
-      Wrapper.setRefreshToken(newUser.refresh_token)
-      //Gets New User's ID to push to DB 
-      const newUserData = await Wrapper.getMe()
-
-      console.log(newUserData)
-      newUser.user_id = newUserData.id
-
-      newUser.SBID = DB.publish(newUser) //Update database with New User. The SBID Is Returned from inside the function
-
-      res.set({
-        user_id: newUser.user_id,
-        SBID: newUser.SBID,
-        success: true,
+    try {
+      const songbasket_id = await DB.AUTH.createUser({
+        spotify_id: user_data.id,
+        access_token,
+        refresh_token,
+        token_expires_at: new Date(Date.now() + expires_in)
       })
-
-      res.send()
-
-    } catch (err) {
-      console.error('SOMETHING WENT WRONG! When retrieving User Access Tokens', err)
-      return res.redirect(301, `${BACKEND}/fail`)
+      res.set({
+        user_data,
+        songbasket_id,
+        success: true,
+      }).send()
+    } catch (error) {
+      throw(error)
     }
+
+  } catch (err) {
+    console.error('SOMETHING WENT WRONG! When retrieving User Access Tokens', err)
+    res.redirect(301, `${BACKEND}/fail`)
+  }
 }
 
 e.fail = (req, res) => {
   res.render('pages/access_denied', {
-    url: spoti.SPOTIFY_LOGIN_URL
+    url: CREDS.SPOTIFY_LOGIN_URL
   })
 }
 

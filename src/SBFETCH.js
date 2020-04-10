@@ -1,8 +1,6 @@
 const express = require('express')
 var request = require('request')
-const { logme } = require('./logme')
-
-const { DB } = require('./DB')
+const { DB } = require('./controllers/DB')
 
 module.exports = {
 	SBFETCH: {

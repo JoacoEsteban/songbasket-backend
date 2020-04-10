@@ -7,8 +7,8 @@ const PORT = e.PORT = 5000
 const baseSP = 'https://api.spotify.com/v1/'
 const baseYT = 'https://www.googleapis.com/youtube/v3/'
 e.PATHS = {
-  www: (() => PROD ? 'https://www.songbasket.com' : 'localhost:?????')(), /* TODO define port */
-  api: (() => PROD ? 'https://api.songbasket.com' : 'localhost:5000')(),
+  www: (() => PROD ? 'https://www.songbasket.com' : 'http://localhost:?????')(), /* TODO define port */
+  api: (() => PROD ? 'https://api.songbasket.com' : 'http://localhost:5000')(),
   spotify: {
     base: baseSP,
     playlists: baseSP + 'playlists/',
@@ -40,21 +40,24 @@ e.REGEX = {
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET
+const REDIRECT_URI = `${e.PATHS.api}/handle_authorization/`
 e.CREDENTIALS = {
   SPOTIFY: {
     CLIENT_ID,
     CLIENT_SECRET,
-    SPOTIFY_LOGIN_URL: `https://accounts.spotify.com/authorize?client_id=${
+    REDIRECT_URI,
+    SPOTIFY_LOGIN_URL: 'https://accounts.spotify.com/authorize?client_id=' +
       CLIENT_ID
-    }&response_type=code&redirect_uri=${
-      `${e.PATHS.api}/handle_authorization/
-    `}&scope=${
+    + '&response_type=' +
+      'code'
+    + '&redirect_uri=' +
+      REDIRECT_URI
+    + '&scope=' +
       'user-read-private+user-read-email+playlist-read-private'
-    }&show_dialog=${
+    + '&show_dialog=' +
       'true'
-    }&state=${
+    + '&state=' +
       '*SONGBASKET*'
-    }`
   },
   YOUTUBE: {
     YOUTUBE_API_KEYS: process.env.YOUTUBE_API_KEYS.split(',')

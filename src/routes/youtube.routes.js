@@ -4,10 +4,6 @@ const CTR = require('../controllers/Youtube/youtube.controller') // short for co
 
 
 module.exports = app => {
-  app.route('*')
-    .get(handlers.checkAuth)
-
-  app.post('/youtubize', CTR.youtubize)
-  app.get('/yt_details', CTR.videoDetails)
-
+  app.post('/youtubize', handlers.checkAuth, CTR.youtubize)
+  app.get('/yt_details', handlers.checkAuth, CTR.videoDetails)
 }

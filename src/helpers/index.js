@@ -63,3 +63,9 @@ e.CREDENTIALS = {
     YOUTUBE_API_KEYS: process.env.YOUTUBE_API_KEYS.split(',')
   }
 }
+
+
+e.SPOTIFY_API_OPTIONS = {
+  userPlaylistsLimit: 50,
+  playlistFields: ''
+}

@@ -1,4 +1,7 @@
+const DB = require('../DB')
 const request = require('request')
+
+const getDate = (date) => new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()));
 
 module.exports = {
   SpotifyAPI: function ({
@@ -15,6 +18,32 @@ module.exports = {
 
     this.logged = logged
     this.user_id = null
+
+    this.user = null
+
+    this.setUser = async user => {
+      try {
+        this.user = user
+        const now = getDate(new Date())
+        const then = new Date(user.token_expires_at)
+        if (now > then) {
+          console.log('expired`')
+          const res = await this.refreshAccessToken(user.refresh_token)
+          if (!res || !res.access_token) throw new Error('FAIL TO REFRESH ACCESS TOKEN')
+
+          user.access_token = res.access_token
+          user.token_expires_at = new Date(now.getTime() + res.expires_in * 1000)
+          await DB.AUTH.updateUserAccessTokenBySongbasketId(user)
+        }
+
+        this.setAccessToken(user.access_token)
+        this.setRefreshToken(user.refresh_token)
+        this.setUserId(user.spotify_id)
+
+      } catch (error) {
+        throw error
+      }
+    }
 
     this.setAccessToken = (access_token) => {
       this.access_token = access_token
@@ -103,24 +132,23 @@ module.exports = {
 
 
 
-      this.refreshAccessToken = () => {
+      this.refreshAccessToken = (refresh_token) => {
         var options = {
           method: 'POST',
           url: 'https://accounts.spotify.com/api/token',
           headers: {
-            Authorization: 'Basic MzBlM2ViZDI1ZmQwNGFjNWIxZTJkZmU4ODlmZGM5MGM6ZDAxYWRlODBhYjc4NDlhYjk5OWNiMDEyNjU0OTkxZGY=',
+            Authorization: 'Basic ' + this.giveMe.encoded(),
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           form: {
             grant_type: 'refresh_token',
-            //TODO Change into give.me func
-            refresh_token: this.refresh_token
+            refresh_token: refresh_token || this.giveMe.refresh_token()
           }
         }
 
         return new Promise((resolve, reject) => {
           request(options, function (error, response, body) {
-            if (error) throw new Error(error)
+            if (error) return reject(error)
             resolve(JSON.parse(response.body))
           })
         })
@@ -136,7 +164,7 @@ module.exports = {
           url: 'https://accounts.spotify.com/api/token',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: 'Basic  ' + this.giveMe.encoded()
+            Authorization: 'Basic ' + this.giveMe.encoded()
           },
           form: {
             grant_type: 'client_credentials'
@@ -213,6 +241,9 @@ module.exports = {
           })
         }
       }
+
+
+
 
 
     return this

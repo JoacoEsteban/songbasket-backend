@@ -33,6 +33,15 @@ const Relations = db.model('Relations', {
 })
 
 const auth = {
+  async authenticate(user_id, songbasket_id) {
+    try {
+      const user = await this.getUserBySongbasketId(songbasket_id)
+      return user.attributes && user.attributes.spotify_id === user_id && user.attributes
+    } catch (err) {
+      if (err.message === 'EmptyResponse') return false
+      throw err
+    }
+  },
   getUserBySpotifyId(spotify_id) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -58,8 +67,8 @@ const auth = {
   updateUserAccessTokenBySongbasketId({songbasket_id, access_token, token_expires_at}) {
     return new Promise(async (resolve, reject) => {
       try {
-        await Users.query({ where: { songbasket_id } }).save({ access_token, token_expires_at })
-        resolve()
+          await Users.where({songbasket_id}).save({access_token, token_expires_at}, {patch: true})
+          resolve()
       } catch (err) {
         reject(err)
       }
@@ -69,15 +78,15 @@ const auth = {
     if (!spotify_id) throw new Error('SPOFITY ID MISSING WHEN CREATING USER')
 
     return new Promise(async (resolve, reject) => {
-      const user = await this.getUserBySpotifyId(spotify_id)
-      if (user && user.attributes) {
-        console.log('USER EXISTS JAJAJAJ')
-        await Users.where({spotify_id}).save({access_token, refresh_token, token_expires_at}, {patch: true})
-        return resolve(user.attributes.songbasket_id)
-      }
-
-      const songbasket_id = (uuid()).replace(/\-/g, '')
       try {
+        const user = await this.getUserBySpotifyId(spotify_id)
+        if (user && user.attributes) {
+          console.log('USER EXISTS')
+          await Users.where({spotify_id}).save({access_token, refresh_token, token_expires_at}, {patch: true})
+          return resolve(user.attributes.songbasket_id)
+        }
+
+        const songbasket_id = (uuid()).replace(/\-/g, '')
         await Users.forge({songbasket_id, spotify_id, access_token, refresh_token, token_expires_at}).save()
         resolve(songbasket_id)
       } catch (error) {

@@ -23,8 +23,10 @@ e.checkAuth = async (req, res, next) => {
   }
 }
 
+const makeStatus = (status, message) => (res, m) => res.status(status).send(m || message || '')
 e.status = {
-  c200: (res) => res.status(200).send(),
-  c500: (res) => res.status(500).send('Internal Server Error'),
-  c400: (res) => res.status(400).send('Bad Request')
+  makeStatus,
+  c200: makeStatus(200),
+  c500: makeStatus(500, 'Internal Server Error'),
+  c400: makeStatus(400, 'Bad Request')
 }

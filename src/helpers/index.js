@@ -67,5 +67,7 @@ e.CREDENTIALS = {
 
 e.SPOTIFY_API_OPTIONS = {
   userPlaylistsLimit: 50,
-  playlistFields: ''
+  rawPlaylistFields: 'followers.total,id,snapshot_id,images,name,owner,public,description,tracks.total',
+  trackFields: 'total,offset,next,' + [ 'is_local', 'items.track('+['id', 'name', 'duration_ms', 'external_urls', 'preview_url', 'artists(name, external_urls, id)', 'album(' + ['id', 'name', 'external_urls', 'images', 'name',].join(',') + ')'].join(',') + ')' ].join(',')
 }
+console.log(e.SPOTIFY_API_OPTIONS.trackFields)

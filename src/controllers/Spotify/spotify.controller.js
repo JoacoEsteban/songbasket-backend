@@ -134,6 +134,55 @@ e.getUserPlaylists = async (req, res) => {
   }
 }
 
-e.getPlaylist = (req, res) => {
+e.getPlaylist = async (req, res) => {
+  const {
+    playlist_id
+  } = req.params
+  if (!playlist_id) return handlers.status.c400(res, 'Invalid playlist_id')
+  const {
+    snapshot_id
+  } = req.query
+  if (snapshot_id && !helpers.REGEX.spotifySnapshotId(snapshot_id)) return handlers.status.c400(res, 'snapshot_id malformatted')
 
+  const plUrl = `/playlists/${playlist_id}`
+  const params = {
+    fields: helpers.SPOTIFY_API_OPTIONS.rawPlaylistFields
+  }
+
+  const checkErrors = (response) => {
+    if (!(response && response.data)) throw new Error('Empty response')
+    if (response.data.error) throw new Error(res.data.error)
+  }
+
+  const response = await API.get(plUrl, {
+    params
+  })
+  checkErrors(response)
+
+  const playlistObject = response.data
+  if (snapshot_id && snapshot_id === playlistObject.snapshot_id) return res.status(304).send()
+
+  playlistObject.tracks.items = []
+  params.fields = helpers.SPOTIFY_API_OPTIONS.trackFields
+
+  const accumulateTracks = async (url = plUrl + '/tracks') => {
+    try {
+      const response = await API.get(url, {
+        params
+      })
+      checkErrors(response)
+
+      playlistObject.tracks.items.push(...response.data.items)
+      if (response.data.next) await accumulateTracks(response.data.next)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  try {
+    await accumulateTracks()
+    res.json(playlistObject)
+  } catch (error) {
+    handlers.status.c500(res, error)
+  }
 }

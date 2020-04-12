@@ -103,6 +103,11 @@ e.guestData = (req, res) => { //Arrives with Authorization Code
 }
 
 // ------------ revision 2 ------------
+const checkErrors = (response) => {
+  if (!(response && response.data)) throw new Error('Empty response')
+  if (response.data.error) throw new Error(res.data.error)
+}
+
 e.setCredentials = async (req, res, next) => {
   try {
     await Wrapper.setUser(req.user)
@@ -111,6 +116,18 @@ e.setCredentials = async (req, res, next) => {
   } catch (error) {
     console.error(error)
     handlers.status.c500(res)
+  }
+}
+
+e.getMe = async (req, res) => {
+  const url = `/me`
+  try {
+    const response = await API.get(url)
+    checkErrors(response)
+    res.json(response.data)
+  } catch (error) {
+    console.error(error)
+    handlers.status.c500(res, error)
   }
 }
 
@@ -147,11 +164,6 @@ e.getPlaylist = async (req, res) => {
   const plUrl = `/playlists/${playlist_id}`
   const params = {
     fields: helpers.SPOTIFY_API_OPTIONS.rawPlaylistFields
-  }
-
-  const checkErrors = (response) => {
-    if (!(response && response.data)) throw new Error('Empty response')
-    if (response.data.error) throw new Error(res.data.error)
   }
 
   const response = await API.get(plUrl, {

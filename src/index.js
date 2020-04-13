@@ -1,3 +1,4 @@
+global.IS_DEV = !process.env.PRODUCTION // TODO apply this in prod
 require('dotenv-flow').config()
 
 const express = require('express')

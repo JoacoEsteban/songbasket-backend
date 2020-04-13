@@ -1,6 +1,7 @@
-const express = require('express')
+const axios = require('axios')
 const request = require('request')
 
+const {getDate} = require('../../helpers/handlers')
 
 module.exports = {
   YouTubeAPI: function ({ access_tokens }) {
@@ -8,7 +9,8 @@ module.exports = {
       return {
         token,
         uses: 0,
-        lastUsed: null
+        lastUsed: null,
+        cooldown: null
       }
     })
     this.current_access_token = {
@@ -36,12 +38,6 @@ module.exports = {
       }
       // TODO manage unusable tokens
       return true
-    }
-
-    // TODO Link this with code
-    this.accessTokenUsed = () => {
-      this.access_tokens[this.current_access_token.index].uses++
-      this.access_tokens[this.current_access_token.index].lastUsed = new Date()
     }
 
     this.giveMe = {

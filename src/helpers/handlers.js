@@ -30,3 +30,7 @@ e.status = {
   c500: makeStatus(500, 'Internal Server Error'),
   c400: makeStatus(400, 'Bad Request')
 }
+
+e.getDate = (date) => new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()));
+
+e.encodeQuery = q => encodeURIComponent(q).replace(/\%20/g, '+')

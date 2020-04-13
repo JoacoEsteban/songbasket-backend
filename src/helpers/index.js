@@ -30,9 +30,10 @@ e.EMAILS = {
 }
 
 e.REGEX = {
-  youtubeVideoId: /(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9-_]{11})/,
+  youtubeVideoId: /^(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9-_]{11})$/,
   spotifyPlaylistId: (txt) => txt.length === 22 && /[a-zA-Z0-9]{22}/.test(txt),
   spotifyUserId: (txt) => /[a-zA-Z0-9\._]+/.test(txt),
+  spotifyTrackId: (txt) => /^[\w]{22}$/.test(txt),
   spotifySnapshotId: (txt) => /[a-zA-Z0-9+/=]/.test(txt)
 }
 
@@ -64,10 +65,20 @@ e.CREDENTIALS = {
   }
 }
 
-
 e.SPOTIFY_API_OPTIONS = {
   userPlaylistsLimit: 50,
   rawPlaylistFields: 'followers.total,id,snapshot_id,images,name,owner,public,description,tracks.total',
   trackFields: 'total,offset,next,' + [ 'is_local', 'items.track('+['id', 'name', 'duration_ms', 'external_urls', 'preview_url', 'artists(name, external_urls, id)', 'album(' + ['id', 'name', 'external_urls', 'images', 'name',].join(',') + ')'].join(',') + ')' ].join(',')
 }
-console.log(e.SPOTIFY_API_OPTIONS.trackFields)
+
+e.YOUTUBE_API_OPTIONS = {
+  searchParams: {
+    part: 'id',
+    maxResults: 5,
+    safeSearch: 'none',
+    type: 'video',
+  },
+  videoDetailsParams: {
+    part: 'snippet, contentDetails'
+  }
+}

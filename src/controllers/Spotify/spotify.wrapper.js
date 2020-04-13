@@ -1,7 +1,6 @@
 const DB = require('../DB')
 const request = require('request')
-
-const getDate = (date) => new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()));
+const {getDate} = require('../../helpers/handlers')
 
 module.exports = {
   SpotifyAPI: function ({

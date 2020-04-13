@@ -97,6 +97,7 @@ const auth = {
 }
 
 const custom = {
+  // TODO Deprecate
   getById(youtube_id) {
     return new Promise((resolve, reject) => {
       YoutubeCustomTracks.query({ where: { youtube_id } })
@@ -117,8 +118,14 @@ const custom = {
 }
 
 const yt = {
-  getById(youtube_id) {
-    return YoutubeTracks.query({ where: { youtube_id } }).fetch()
+  async getById(youtube_id) {
+    try {
+      const res = await YoutubeTracks.query({ where: { youtube_id } }).fetch()
+      return {youtube_id: res.attributes.youtube_id, snippet: res.attributes.snippet, duration: res.attributes.duration}
+    } catch (error) {
+      if (error.message === 'EmptyResponse') return false
+      throw error
+    }
   },
   addReg(youtube_id, snippet, duration) {
     return YoutubeTracks.forge({ youtube_id, snippet: JSON.stringify(snippet), duration }).save()
@@ -137,62 +144,73 @@ const sp = {
         })
     })
   },
-  addReg(spotify_id, bestMatch) {
+  addReg(spotify_id) {
     // TODO Fix duplicated yt registry cancelling this query
-    return SpotifyTracks.forge({ spotify_id, best_match: bestMatch }).save()
+    return SpotifyTracks.forge({ spotify_id }).save()
+  },
+  async exists(spotify_id) {
+    try {
+      return !!(await this.getById(spotify_id))
+    } catch (error) {
+      throw error
+    }
   }
 }
 
 const rel = {
   async getAllFrom(spotify_id) {
-    let track = await sp.getById(spotify_id)
-    if (!track) {
-      // Track not found
-      return false
-    }
-    console.log('FOUND', track)
-    let conversion = []
-    let ids = await Relations.query({ select: 'youtube_id', where: { spotify_id } }).fetchAll()
-    ids = ids.models.map(r => r.attributes.youtube_id)
-    let remaining = ids.length
-    for (let i in ids) {
-      let id = ids[i]
-      // console.log('gettin', id)
-      let trackie
-      try {
-        trackie = await yt.getById(id)
-      } catch (err) {
-        console.error('ERRORRRR AT getById line 95', id, err)
+    try {
+      const track = await sp.getById(spotify_id)
+      if (!track) {
+        // Track not found
+        return false
       }
-      let {duration, snippet, youtube_id} = trackie.attributes
-      conversion.push({id: youtube_id, duration, snippet})
-      console.log('rem', remaining)
-      if (--remaining === 0) return { id: spotify_id, bestMatch: track.best_match, yt: conversion }
+      console.log('FOUND', track)
+      let conversion = []
+      let ids = await Relations.query({ select: 'youtube_id', where: { spotify_id } }).fetchAll()
+      ids = ids.models.map(r => r.attributes.youtube_id)
+      let remaining = ids.length
+      for (let i in ids) {
+        let id = ids[i]
+        // console.log('gettin', id)
+        let trackie
+        try {
+          trackie = await yt.getById(id)
+          if (!trackie) throw new Error('VIDEO ENTRY NOT FOUND IN DB')
+        } catch (err) {
+          console.error('ERRORRRR AT getById', id, err)
+        }
+        let {duration, snippet, youtube_id} = trackie
+        conversion.push({id: youtube_id, duration, snippet})
+        console.log('rem', remaining)
+        if (!--remaining) return { id: spotify_id, yt: conversion }
+      }
+    } catch (error) {
+      throw error
     }
-    
   },
-  insertAllFrom(spotify_id, results, bestMatch) {
+  addRelations(spotify_id, ids) {
     return new Promise(async (resolve, reject) => {
-      let bmatch = results.find(res => res.id === bestMatch)
+      if (!spotify_id || !ids || !ids.length) return reject(new Error('NO IDS PROVIDED'))
+      if (!Array.isArray(ids)) ids = [ids]
       try {
-        await yt.addReg(bmatch.id, bmatch.snippet, bmatch.duration)
-      } catch (err) {
-        console.error('ERR WHILE ADDING BMATCH TO YT', bmatch.id, err)
+        if (!await sp.exists(spotify_id)) await sp.addReg(spotify_id)
+      } catch (error) {
+        return reject(error)
       }
-      try {
-        await sp.addReg(spotify_id, bmatch.id)
-      } catch (err) {
-        console.error('ERR WHILE ADDING BMATCH TO SP', spotify_id, bmatch.id, err)
-      }
-      try {
-        await this.addReg(spotify_id, bmatch.id)
-      } catch (err) {
-        console.error('ERR WHILE ADDING BMATCH TO REL', spotify_id, bmatch.id, err)
-      }
-      // This three ops are executed first before bestMatch acts as a foreign key to spotify_tracks table
-      // So the entry must exist in the youtube_tracks table before creating the other rows
-      results = results.filter(res => res.id !== bmatch.id)
 
+      let reqsLeft = ids.length
+      let errors = []
+      ids.forEach(id => {
+        this.addReg(spotify_id, id)
+        .catch(error => errors.push(error) && console.error('ERROR MAKING TRACK RELATION', error))
+        .finally(() => !--reqsLeft && (errors.length ? reject : resolve)(errors.length && errors || null))
+      })
+    })
+  },
+  insertAllFrom(spotify_id, results) {
+    // TODO Deprecate
+    return new Promise(async (resolve, reject) => {
       let ammount = results.length
       results.forEach(async ({ id, snippet, duration }) => {
         try {
@@ -206,7 +224,7 @@ const rel = {
         } catch (err) {
           console.error('ERR WHEN ADDING TO REL', spotify_id, id, err)
         }
-        if (--ammount === 0) resolve()
+        !--ammount && resolve()
       })
     })
   },
@@ -217,6 +235,6 @@ const rel = {
 
 module.exports = {
   DB: rel,
-  CUSTOM: custom,
+  YT: yt,
   AUTH: auth
 }

@@ -27,12 +27,13 @@ const API = axios.create({
 const e = module.exports
 
 e.youtubize = async (req, res) => {
-  const track = req.body.track
-  console.log(track)
   try {
+    let track = req.body.track
+    console.log(track)
     if (!track) return handlers.status.c400(res, 'No track provided')
-    if (!track.query) return handlers.status.c400(res)
-    if (!helpers.REGEX.spotifyTrackId(track.id)) return handlers.status.c400(res)
+    if (typeof track === 'string') track = JSON.parse(track)
+    if (!track.query) return handlers.status.c400(res, 'dou1')
+    if (!helpers.REGEX.spotifyTrackId(track.id)) return handlers.status.c400(res, 'dou2')
     // ------------------
     const localConversion = await DB.getAllFrom(track.id)
     if (localConversion !== false) {

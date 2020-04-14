@@ -184,7 +184,7 @@ e.getPlaylist = async (req, res) => {
       })
       checkErrors(response)
 
-      playlistObject.tracks.items.push(...response.data.items)
+      playlistObject.tracks.items.push(...response.data.items.map(i => i.track))
       if (response.data.next) await accumulateTracks(response.data.next)
     } catch (error) {
       throw error

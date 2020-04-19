@@ -1,7 +1,10 @@
 global.IS_DEV = !process.env.PRODUCTION // TODO apply this in prod
+global.log = (...aa) => aa.forEach(a => console.log(require('util').inspect(a, {showHidden: false, depth: null})))
+
 require('dotenv-flow').config()
 
 const express = require('express')
+const serverless = require('serverless-http')
 const path = require('path')
 const helpers = require('./helpers')
 const PORT = process.env.PORT || helpers.PORT
@@ -16,3 +19,5 @@ app.set('view engine', 'ejs')
 app.listen(PORT, () => console.log(`Listening on ${PORT}`))
 
 require('./routes/index.routes')(app)
+
+module.exports.handler = serverless(app);

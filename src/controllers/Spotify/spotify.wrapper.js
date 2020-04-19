@@ -26,7 +26,8 @@ module.exports = {
         const now = getDate(new Date())
         const then = new Date(user.token_expires_at)
         if (now > then) {
-          console.log('expired`')
+          console.log('expired')
+          // TODO Fix this before getting another request
           const res = await this.refreshAccessToken(user.refresh_token)
           if (!res || !res.access_token) throw new Error('FAIL TO REFRESH ACCESS TOKEN')
 

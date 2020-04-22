@@ -1,10 +1,11 @@
 const uuid = require('uuid').v4
 
-const config = process.env.PRODUCTION ? {
+const config = process.env.PRODUCTION || process.env.PRODUCTION_DB ? {
   client: 'postgres',
   connection: {
-    host: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
+    host: process.env.DATABASE_URL,
     user: 'postgres',
+    port: process.env.DATABASE_PORT,
     password: process.env.DATABASE_PASSWORD,
     database: 'songbasket_db',
     charset: 'utf8'
@@ -231,6 +232,20 @@ const rel = {
   addReg(spotify_id, youtube_id) {
     return Relations.forge({ spotify_id, youtube_id }).save()
   }
+}
+
+console.log('DATABASE: ', config.connection.host);
+
+const testDb = true
+if (testDb) {
+  (async () => {
+    try {
+      const user = await auth.getUserBySpotifyId('joaqo.esteban')
+      console.log('dbtest:::', user)
+    } catch (error) {
+      console.error(error)
+    }
+  })()
 }
 
 module.exports = {

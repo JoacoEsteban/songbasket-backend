@@ -4,8 +4,10 @@ e.DB = {
   client: 'postgres',
   connection: {
     host: 'localhost',
+    port: 5432,
     user: 'postgres',
-    database: 'songbasket_db_local',
+    // password: '',
+    database: 'songbasket_db',
     charset: 'utf8'
   }
 }

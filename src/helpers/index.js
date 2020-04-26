@@ -30,7 +30,8 @@ e.EMAILS = {
 }
 
 e.REGEX = {
-  youtubeVideoId: /^(https:\/\/www.youtube.com.watch\?v=)?([a-zA-Z0-9-_]{11})$/,
+  youtubeVideoId: /^[a-zA-Z0-9-_]{11}$/,
+  youtubeVideoUrl: /^https:\/\/www.youtube.com.watch\?v=([a-zA-Z0-9-_]{11})$/,
   spotifyPlaylistId: (txt) => txt.length === 22 && /[a-zA-Z0-9]{22}/.test(txt),
   spotifyUserId: (txt) => /[a-zA-Z0-9\._]+/.test(txt),
   spotifyTrackId: (txt) => /^[\w]{22}$/.test(txt),

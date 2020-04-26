@@ -76,12 +76,12 @@ e.videoDetails = async ids => {
     await (() => new Promise((resolve, reject) => {
       const errors = []
       ids.forEach(async (id, index) => {
-        const idFormatted = helpers.REGEX.youtubeVideoId.exec(id)
-        if (!idFormatted) return ids[index] = {
+        const idFormatted = helpers.REGEX.youtubeVideoUrl.exec(id)
+        if (!idFormatted && !helpers.REGEX.youtubeVideoId.test(id)) return ids[index] = {
           id,
           error: 'invalid ID'
         }
-        id = idFormatted[idFormatted.length - 1]
+        if (idFormatted) id = idFormatted[1]
 
         YT.getById(id)
           .then(cachedConversion => {

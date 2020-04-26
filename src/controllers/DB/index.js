@@ -241,9 +241,9 @@ if (testDb) {
   (async () => {
     try {
       const user = await auth.getUserBySpotifyId('joaqo.esteban')
-      console.log('dbtest:::', user)
+      console.log('DATABASE CONNECTED')
     } catch (error) {
-      console.error(error)
+      console.error('DATABASE NOT CONNECTED:', error)
     }
   })()
 }

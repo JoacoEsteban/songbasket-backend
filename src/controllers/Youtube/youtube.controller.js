@@ -32,7 +32,7 @@ e.youtubize = async (req, res) => {
     console.log(track)
     if (!track) return handlers.status.c400(res, 'No track provided')
     if (typeof track === 'string') track = JSON.parse(track)
-    if (!track.query) return handlers.status.c400(res, 'dou1')
+    if (!(track && track.query)) return handlers.status.c400(res, 'dou1')
     if (!helpers.REGEX.spotifyTrackId(track.id)) return handlers.status.c400(res, 'dou2')
     // ------------------
     const localConversion = await DB.getAllFrom(track.id)
@@ -51,7 +51,7 @@ e.youtubize = async (req, res) => {
       console.error(error)
     }
   } catch (error) {
-    console.error('ERROR WHEN CHECKING DB @index.js', error)
+    console.error('ERROR WHEN YOUTUBIZING DB @index.js', error)
     handlers.status.c500(res, error)
   }
 }

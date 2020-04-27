@@ -46,7 +46,7 @@ e.youtubize = async (req, res) => {
     const conversion = await Youtubize(track)
     res.json({id: track.id, yt: conversion})
     try {
-      await DB.addRelations(track.id, conversion.map(c => c.youtube_id))
+      if (conversion.length) await DB.addRelations(track.id, conversion.map(c => c.youtube_id))
     } catch (error) {
       console.error(error)
     }
@@ -129,6 +129,7 @@ const defineError = error => {
 const Youtubize = async track => {
   try {
     const ids = await runSearch(track)
+    if (!ids.length) return []
     const videos = await e.videoDetails(ids)
 
     return videos

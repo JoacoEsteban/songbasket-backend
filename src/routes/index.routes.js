@@ -10,6 +10,10 @@ module.exports = app => {
     res.redirect(301, helpers.PATHS.www)
   })
 
+  app.all('/ping', (req, res) => {
+    res.status(200).send()
+  })
+
   require('./auth.routes')(app)
   require('./spotify.routes')(app)
   require('./youtube.routes')(app)

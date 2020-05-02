@@ -32,8 +32,8 @@ e.youtubize = async (req, res) => {
     console.log(track)
     if (!track) return handlers.status.c400(res, 'No track provided')
     if (typeof track === 'string') track = JSON.parse(track)
-    if (!(track && track.query)) return handlers.status.c400(res, 'dou1')
-    if (!helpers.REGEX.spotifyTrackId(track.id)) return handlers.status.c400(res, 'dou2')
+    if (!(track && track.query)) return handlers.status.c400(res)
+    if (!helpers.REGEX.spotifyTrackId(track.id)) return handlers.status.c400(res)
     // ------------------
     const localConversion = await DB.getAllFrom(track.id)
     if (localConversion !== false) {
@@ -48,10 +48,10 @@ e.youtubize = async (req, res) => {
     try {
       if (conversion.length) await DB.addRelations(track.id, conversion.map(c => c.youtube_id))
     } catch (error) {
-      console.error(error)
+      // console.error(error)
     }
   } catch (error) {
-    console.error('ERROR WHEN YOUTUBIZING DB @index.js', error)
+    console.error('ERROR WHEN YOUTUBIZING @index.js', error.toJSON())
     handlers.status.c500(res, error)
   }
 }
@@ -119,8 +119,9 @@ e.videoDetails = async ids => {
 }
 
 const defineError = error => {
-  console.error(error)
-  if (error.code === 403) {
+  console.error(error.code, error.toJSON())
+  const code = error && error.response && error.response.status
+  if (code === 403) {
     if (Wrapper.cycleAccessToken()) return true
     else throw new Error('QUOTA EXCEEDED; NO ACCESS TOKENS LEFT')
   }

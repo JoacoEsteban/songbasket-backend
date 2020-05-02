@@ -161,40 +161,45 @@ e.getPlaylist = async (req, res) => {
   } = req.query
   if (snapshot_id && !helpers.REGEX.spotifySnapshotId(snapshot_id)) return handlers.status.c400(res, 'snapshot_id malformatted')
 
-  const plUrl = `/playlists/${playlist_id}`
-  const params = {
-    fields: helpers.SPOTIFY_API_OPTIONS.rawPlaylistFields
-  }
+  try {
+    const plUrl = `/playlists/${playlist_id}`
+    const params = {
+      fields: helpers.SPOTIFY_API_OPTIONS.rawPlaylistFields
+    }
 
-  const response = await API.get(plUrl, {
-    params
-  })
-  checkErrors(response)
+    const response = await API.get(plUrl, {
+      params
+    })
+    checkErrors(response)
 
-  const playlistObject = response.data
-  if (snapshot_id && snapshot_id === playlistObject.snapshot_id) return res.status(304).send()
+    const playlistObject = response.data
+    if (snapshot_id && snapshot_id === playlistObject.snapshot_id) return res.status(304).send()
 
-  playlistObject.tracks.items = []
-  params.fields = helpers.SPOTIFY_API_OPTIONS.trackFields
+    playlistObject.tracks.items = []
+    params.fields = helpers.SPOTIFY_API_OPTIONS.trackFields
 
-  const accumulateTracks = async (url = plUrl + '/tracks') => {
+    const accumulateTracks = async (url = plUrl + '/tracks') => {
+      try {
+        const response = await API.get(url, {
+          params
+        })
+        checkErrors(response)
+        
+        playlistObject.tracks.items.push(...response.data.items.map(i => i.track))
+        if (response.data.next) await accumulateTracks(response.data.next)
+      } catch (error) {
+        throw error
+      }
+    }
+
     try {
-      const response = await API.get(url, {
-        params
-      })
-      checkErrors(response)
-
-      playlistObject.tracks.items.push(...response.data.items.map(i => i.track))
-      if (response.data.next) await accumulateTracks(response.data.next)
+      await accumulateTracks()
+      res.json(playlistObject)
     } catch (error) {
       throw error
     }
-  }
-
-  try {
-    await accumulateTracks()
-    res.json(playlistObject)
   } catch (error) {
+    console.error(error.toJSON())
     handlers.status.c500(res, error)
   }
 }

@@ -1,13 +1,13 @@
-global.IS_DEV = !process.env.PRODUCTION // TODO apply this in prod
+require('./env.config.js')
+global.IS_DEV = !global.CONSTANTS.PRODUCTION // TODO apply this in prod
 global.log = (...aa) => aa.forEach(a => console.log(require('util').inspect(a, {showHidden: false, depth: null})))
 
-require('dotenv-flow').config()
 
 const express = require('express')
 const serverless = require('serverless-http')
 const path = require('path')
 const helpers = require('./helpers')
-const PORT = process.env.PORT || helpers.PORT
+const PORT = global.CONSTANTS.PORT || helpers.PORT
 const bodyParser = require('body-parser')
 const app = express()
 app.use(bodyParser.json())

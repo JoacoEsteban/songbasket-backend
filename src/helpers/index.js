@@ -1,6 +1,6 @@
 const e = module.exports
 
-const PROD = e.ENV_PROD = process.env.PRODUCTION
+const PROD = e.ENV_PROD = global.CONSTANTS.PRODUCTION
 const PORT = e.PORT = 5000
 
 
@@ -40,8 +40,8 @@ e.REGEX = {
 
 
 
-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID
-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET
+const CLIENT_ID = global.CONSTANTS.SPOTIFY_CLIENT_ID
+const CLIENT_SECRET = global.CONSTANTS.SPOTIFY_CLIENT_SECRET
 const REDIRECT_URI = `${e.PATHS.api}/handle_authorization/`
 e.CREDENTIALS = {
   SPOTIFY: {
@@ -62,7 +62,7 @@ e.CREDENTIALS = {
       '*SONGBASKET*'
   },
   YOUTUBE: {
-    YOUTUBE_API_KEYS: process.env.YOUTUBE_API_KEYS.split(',')
+    YOUTUBE_API_KEYS: global.CONSTANTS.YOUTUBE_API_KEYS.split(',')
   }
 }
 

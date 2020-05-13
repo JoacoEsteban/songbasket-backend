@@ -56,10 +56,12 @@ e.authorize = async (req, res) => {
         token_expires_at: new Date(Date.now() + expires_in)
       })
       user_data.songbasket_id = songbasket_id
-      res.set({
+
+      res.redirect('songbasket://auth?payload=' + JSON.stringify({
         spotify_authorization_success: true,
         user_data: JSON.stringify(user_data)
-      }).send()
+      }))
+
     } catch (error) {
       throw (error)
     }
@@ -146,7 +148,7 @@ e.getUserPlaylists = async (req, res) => {
     if (response.data.error) throw new Error(res.data.error)
     res.json(response.data)
   } catch (error) {
-    console.error(error)
+    console.error('MARSELO', error.toJSON())
     handlers.status.c500(res, error)
   }
 }

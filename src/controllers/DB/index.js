@@ -1,12 +1,12 @@
 const uuid = require('uuid').v4
 
-const config = process.env.PRODUCTION || process.env.PRODUCTION_DB ? {
+const config = global.CONSTANTS.PRODUCTION || global.CONSTANTS.PRODUCTION_DB ? {
   client: 'postgres',
   connection: {
-    host: process.env.DATABASE_URL,
+    host: global.CONSTANTS.DATABASE_URL,
     user: 'postgres',
-    port: process.env.DATABASE_PORT,
-    password: process.env.DATABASE_PASSWORD,
+    port: global.CONSTANTS.DATABASE_PORT,
+    password: global.CONSTANTS.DATABASE_PASSWORD,
     database: 'songbasket_db',
     charset: 'utf8'
   }

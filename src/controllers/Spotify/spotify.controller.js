@@ -59,11 +59,11 @@ e.authorize = async (req, res) => {
 
       res.redirect('songbasket://auth?payload=' + JSON.stringify({
         spotify_authorization_success: true,
-        user_data: JSON.stringify(user_data)
+        user_data
       }))
 
     } catch (error) {
-      throw (error)
+      throw error
     }
 
   } catch (err) {

@@ -20,6 +20,9 @@ const db = require('bookshelf')(knex)
 const Users = db.model('Users', {
   tableName: 'users'
 })
+const BetaUsers = db.model('BetaUsers', {
+  tableName: 'beta_enabled_users'
+})
 const YoutubeCustomTracks = db.model('YoutubeCustomTracks', {
   tableName: 'youtube_custom_tracks'
 })
@@ -41,6 +44,16 @@ const auth = {
     } catch (err) {
       if (err.message === 'EmptyResponse') return false
       throw err
+    }
+  },
+  async authBetaUser(spotify_user_id) {
+    try {
+      let user = await BetaUsers.query({where: {spotify_user_id, enabled: true}}).fetch()
+      user = user.attributes
+      return !user.enabled_until || new Date(user.enabled_until) > new Date()
+    } catch (error) {
+      if (error.message === 'EmptyResponse') return false
+      throw error
     }
   },
   getUserBySpotifyId(spotify_id) {

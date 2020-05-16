@@ -11,3 +11,5 @@ global.CONSTANTS = process.env.PRODUCTION ? (() => ({
 }))() : require('dotenv-flow').config().parsed
 global.CONSTANTS.PRODUCTION = utils.parseBool(process.env.PRODUCTION)
 global.CONSTANTS.PRODUCTION_DB = utils.parseBool(process.env.PRODUCTION_DB)
+
+global.CONSTANTS.BETA_ENABLED = true

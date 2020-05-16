@@ -13,6 +13,9 @@ e.checkAuth = async (req, res, next) => {
   if (token.length !== 39 || !(token.indexOf('Bearer ') + 1)) return reject(res)
 
   try {
+// --------------BETA-AUTH--------------
+  if (!await DB.AUTH.authBetaUser(user_id)) return reject(res, 'Not a beta participant')
+// --------------BETA-AUTH--------------
     const user = await DB.AUTH.authenticate(user_id, token.replace('Bearer ', ''))
     if (!user) return reject(res)
     req.user = user

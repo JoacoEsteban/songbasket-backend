@@ -1,5 +1,5 @@
 require('./env.config.js')
-global.IS_DEV = !global.CONSTANTS.PRODUCTION // TODO apply this in prod
+global.IS_DEV = !global.CONSTANTS.PRODUCTION
 global.log = (...aa) => aa.forEach(a => console.log(require('util').inspect(a, {showHidden: false, depth: null})))
 
 
@@ -16,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
+console.log('to listen port', PORT)
 app.listen(PORT, () => console.log(`Listening on ${PORT}`))
 
 require('./routes/index.routes')(app)

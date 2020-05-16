@@ -1,14 +1,13 @@
 const e = module.exports
 
 const PROD = e.ENV_PROD = global.CONSTANTS.PRODUCTION
-const PORT = e.PORT = 5000
 
 
 const baseSP = 'https://api.spotify.com/v1/'
 const baseYT = 'https://www.googleapis.com/youtube/v3/'
 e.PATHS = {
   www: (() => PROD ? 'https://www.songbasket.com' : 'http://localhost:?????')(), /* TODO define port */
-  api: (() => PROD ? 'https://api.songbasket.com' : 'http://localhost:5000')(),
+  api: (() => PROD ? 'https://api.songbasket.com' : 'http://localhost:' + process.env.PORT)(),
   spotify: {
     base: baseSP,
     playlists: baseSP + 'playlists/',

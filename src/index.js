@@ -7,7 +7,6 @@ const express = require('express')
 const serverless = require('serverless-http')
 const path = require('path')
 const helpers = require('./helpers')
-const PORT = global.CONSTANTS.PORT || helpers.PORT
 const bodyParser = require('body-parser')
 const app = express()
 app.use(bodyParser.json())
@@ -16,8 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
-console.log('to listen port', PORT)
-app.listen(PORT || 5000, () => console.log(`Listening on ${PORT}`))
+app.listen(process.env.PORT || 5000, () => console.log(`Listening on ${PORT}`))
 
 require('./routes/index.routes')(app)
 

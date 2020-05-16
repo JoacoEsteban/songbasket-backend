@@ -12,8 +12,6 @@ const config = global.CONSTANTS.PRODUCTION || global.CONSTANTS.PRODUCTION_DB ? {
   }
 } : require('../../config/core.config').DB
 
-console.log('DB CONFIG', config)
-
 const knex = require('knex')(config)
 knex.client.pool.createRetryIntervalMillis = 500
 

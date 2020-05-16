@@ -2,6 +2,7 @@ const utils = require('./utils')
 global.CONSTANTS = process.env.PRODUCTION ? (() => {
   return {
     YOUTUBE_API_KEYS: process.env.YOUTUBE_API_KEYS,
+    SPOTIFY_CLIENT_ID: '30e3ebd25fd04ac5b1e2dfe889fdc90c',
     SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
@@ -13,4 +14,4 @@ global.CONSTANTS = process.env.PRODUCTION ? (() => {
 global.CONSTANTS.PRODUCTION = utils.parseBool(process.env.PRODUCTION)
 global.CONSTANTS.PRODUCTION_DB = utils.parseBool(process.env.PRODUCTION_DB)
 
-console.log('test', require('dotenv-flow').config(), '\n\n')
+console.log('test', global.CONSTANTS, '\n\n')

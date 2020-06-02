@@ -43,7 +43,7 @@ e.youtubize = async (req, res) => {
     }
     // ------------------
     console.log('Track not cached, retrieving', track.id)
-    const conversion = await Youtubize(track)
+    const conversion = await Youtubize(track, req)
     res.json({id: track.id, yt: conversion})
     try {
       if (conversion.length) await DB.addRelations(track.id, conversion.map(c => c.youtube_id))
@@ -59,14 +59,14 @@ e.youtubize = async (req, res) => {
 e.routeVideoDetails = async (req, res) => {
   // TODO
   try {
-    const details = await e.videoDetails(req.params.ids)
+    const details = await e.videoDetails(req.params.ids, req)
     return res.json(details.length === 1 ? details[0] : details)
   } catch (error) {
     handlers.status.c500(res, error)
   }
 }
 
-e.videoDetails = async ids => {
+e.videoDetails = async (ids, req) => {
   // TODO Forbid multiple matches with "$" at the end of regex
   if (!ids) throw new Error('ID MISSING')
   if (!Array.isArray(ids)) ids = ids.split(',')
@@ -106,7 +106,7 @@ e.videoDetails = async ids => {
     if (toRetrieve.length) {
       retrievedTracks = await getVideoDetails(toRetrieve)
       try {
-        await retrievedTracks.forEach(async track => YT.addReg(track.youtube_id, track.snippet, track.duration))
+        await retrievedTracks.forEach(async track => YT.addReg(track.youtube_id, track.snippet, track.duration, req.user.spotify_id))
       } catch (error) {
         console.error('ERROR WHEN ADDING TRACK TO TO DB', error)
       }
@@ -127,11 +127,11 @@ const defineError = error => {
   }
 }
 
-const Youtubize = async track => {
+const Youtubize = async (track, req) => {
   try {
     const ids = await runSearch(track)
     if (!ids.length) return []
-    const videos = await e.videoDetails(ids)
+    const videos = await e.videoDetails(ids, req)
 
     return videos
   } catch (error) {

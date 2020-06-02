@@ -141,8 +141,8 @@ const yt = {
       throw error
     }
   },
-  addReg(youtube_id, snippet, duration) {
-    return YoutubeTracks.forge({ youtube_id, snippet: JSON.stringify(snippet), duration }).save()
+  addReg(youtube_id, snippet, duration, created_by) {
+    return YoutubeTracks.forge({ youtube_id, snippet: JSON.stringify(snippet), duration, created_by }).save()
   }
 }
 

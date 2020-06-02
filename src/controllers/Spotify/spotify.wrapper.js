@@ -225,8 +225,8 @@ module.exports = {
 
         redirect_uri: () => this.redirect_uri,
         encoded: () => {
-          let code = this.giveMe.client_id() + ':' + this.giveMe.client_secret()
-          let buf = new Buffer.alloc(code.length, code)
+          const code = this.giveMe.client_id() + ':' + this.giveMe.client_secret()
+          const buf = new Buffer.alloc(code.length, code)
           return buf.toString('base64')
         },
         user: () => {

@@ -14,7 +14,7 @@ const Wrapper = new require('./youtube.wrapper').YouTubeAPI({
 
 const makeParams = (params) => {
   return {
-    key: Wrapper.giveMe.current_access_token(),
+    key: Wrapper.creds.access_token,
     ...params
   }
 }
@@ -26,6 +26,14 @@ const API = axios.create({
 
 const e = module.exports
 
+e.checkQuota = async (req, res, next) => {
+  // TODO Check user requests limit
+  req.hasQuota = !!Wrapper.creds.access_token
+  next()
+}
+
+e.quotaReject = res => handlers.status.c503(res)
+
 e.youtubize = async (req, res) => {
   try {
     let track = req.body.track
@@ -36,12 +44,14 @@ e.youtubize = async (req, res) => {
     if (!helpers.REGEX.spotifyTrackId(track.id)) return handlers.status.c400(res)
     // ------------------
     const localConversion = await DB.getAllFrom(track.id)
-    if (localConversion !== false) {
-      // TODO check if track needs cache invalidation
+    // TODO check if track needs cache invalidation
+    if (localConversion !== false && localConversion.yt.length) {
       console.log('Track was found in DataBase')
       return res.json(localConversion)
     }
     // ------------------
+    if (!req.hasQuota) return e.quotaReject(res)
+
     console.log('Track not cached, retrieving', track.id)
     const conversion = await Youtubize(track, req)
     res.json({id: track.id, yt: conversion})
@@ -103,9 +113,10 @@ e.videoDetails = async (ids, req) => {
   try {
     const toRetrieve = ids.filter(id => typeof id === 'string')
     let retrievedTracks = []
-    if (toRetrieve.length) {
+    if (toRetrieve.length && req.hasQuota) {
       retrievedTracks = await getVideoDetails(toRetrieve)
       try {
+        // TODO turn into asyncForEach
         await retrievedTracks.forEach(async track => YT.addReg(track.youtube_id, track.snippet, track.duration, req.user.spotify_id))
       } catch (error) {
         console.error('ERROR WHEN ADDING TRACK TO TO DB', error)
@@ -118,11 +129,11 @@ e.videoDetails = async (ids, req) => {
   // ------------ END RETRIEVE ------------
 }
 
-const defineError = error => {
+const defineError = (error, token) => {
   console.error(error.code, error.toJSON())
   const code = error && error.response && error.response.status
   if (code === 403) {
-    if (Wrapper.cycleAccessToken()) return true
+    if (Wrapper.onExpiredAccessToken(token)) return true
     else throw new Error('QUOTA EXCEEDED; NO ACCESS TOKENS LEFT')
   }
 }
@@ -144,21 +155,21 @@ const runSearch = async ({
   duration
 }) => {
   const url = '/search'
+  const params = makeParams((() => {
+    const params = {
+      ...helpers.YOUTUBE_API_OPTIONS.searchParams,
+      q: handlers.encodeQuery(query),
+    }
+    duration && (params.videoDuration = duration)
+    return params
+  })())
+
   try {
-    const response = await API.get(url, {
-      params: makeParams((() => {
-        const params = {
-          ...helpers.YOUTUBE_API_OPTIONS.searchParams,
-          q: handlers.encodeQuery(query),
-        }
-        duration && (params.videoDuration = duration)
-        return params
-      })())
-    })
+    const response = await API.get(url, { params })
     return response && response.data.items.map(i => i.id.videoId)
   } catch (error) {
     try {
-      if (!defineError(error)) throw error
+      if (!defineError(error, params.key)) throw error
       else return await runSearch({
         query,
         duration
@@ -171,17 +182,17 @@ const runSearch = async ({
 
 const getVideoDetails = async ids => {
   const url = '/videos'
+  const params = makeParams({
+    ...helpers.YOUTUBE_API_OPTIONS.videoDetailsParams,
+    id: ids.join(',')
+  })
+
   try {
-    const response = await API.get(url, {
-      params: makeParams({
-        ...helpers.YOUTUBE_API_OPTIONS.videoDetailsParams,
-        id: ids.join(',')
-      })
-    })
+    const response = await API.get(url, { params })
     return response && response.data.items.map(({snippet, contentDetails, id}) => ({snippet, youtube_id: id, duration: parseDuration(contentDetails.duration)}))
   } catch (error) {
     try {
-      if (!defineError(error)) throw error
+      if (!defineError(error, params.key)) throw error
       else return await getVideoDetails({
         ids
       }) // token cycled, try again

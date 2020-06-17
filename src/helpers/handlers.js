@@ -31,7 +31,8 @@ e.status = {
   makeStatus,
   c200: makeStatus(200),
   c500: makeStatus(500, 'Internal Server Error'),
-  c400: makeStatus(400, 'Bad Request')
+  c400: makeStatus(400, 'Bad Request'),
+  c503: makeStatus(503, 'Service Unavailable')
 }
 
 e.getDate = (date) => new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()));

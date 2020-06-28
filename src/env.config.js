@@ -6,6 +6,8 @@ global.CONSTANTS = process.env.PRODUCTION ? (() => ({
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
     DATABASE_PORT: process.env.DATABASE_PORT,
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+    TELEGRAM_USER_IDS: process.env.TELEGRAM_USER_IDS,
     PRODUCTION: true,
     PRODUCTION_DB: true
 }))() : require('dotenv-flow').config().parsed
@@ -13,3 +15,6 @@ global.CONSTANTS.PRODUCTION = utils.parseBool(process.env.PRODUCTION)
 global.CONSTANTS.PRODUCTION_DB = utils.parseBool(process.env.PRODUCTION_DB)
 
 global.CONSTANTS.BETA_ENABLED = true
+
+global.CASE = require('change-case')
+global.CASE.kebabCase = global.CASE.paramCase

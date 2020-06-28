@@ -247,13 +247,28 @@ const rel = {
   }
 }
 
+const list = {
+  async users (params = {}) {
+    let {select, where} = params
+    !select && (select = '')
+    !where && (where = {})
+
+    try {
+      const users = await Users.query({select, where}).orderBy('created_at', 'DESC').fetchAll()
+      return users.models.map(({attributes}) => attributes)
+    } catch (error) {
+      throw error
+    }
+  }
+}
+
 console.log('DATABASE: ', config.connection.host);
 
 const testDb = true
 if (testDb) {
   (async () => {
     try {
-      const user = await auth.getUserBySpotifyId('joaqo.esteban')
+      await auth.getUserBySpotifyId('joaqo.esteban')
       console.log('DATABASE CONNECTED')
     } catch (error) {
       console.error('DATABASE NOT CONNECTED:', error)
@@ -264,5 +279,6 @@ if (testDb) {
 module.exports = {
   DB: rel,
   YT: yt,
-  AUTH: auth
+  AUTH: auth,
+  LIST: list
 }

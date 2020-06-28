@@ -7,7 +7,7 @@ const baseSP = 'https://api.spotify.com/v1/'
 const baseYT = 'https://www.googleapis.com/youtube/v3/'
 e.PATHS = {
   www: (() => PROD ? 'https://www.songbasket.com' : 'http://localhost:?????')(), /* TODO define port */
-  api: (() => PROD ? 'https://api.songbasket.com' : 'http://localhost:' + process.env.PORT)(),
+  api: (() => PROD ? 'https://api.songbasket.com' : 'http://localhost:' + (process.env.PORT || 5000))(),
   spotify: {
     base: baseSP,
     playlists: baseSP + 'playlists/',

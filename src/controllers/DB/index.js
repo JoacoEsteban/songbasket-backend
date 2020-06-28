@@ -95,14 +95,14 @@ const auth = {
       try {
         const user = await this.getUserBySpotifyId(spotify_id)
         if (user && user.attributes) {
-          console.log('USER EXISTS')
+          // EXISING USER
           await Users.where({spotify_id}).save({access_token, refresh_token, token_expires_at}, {patch: true})
-          return resolve(user.attributes.songbasket_id)
+          return resolve({songbasket_id: user.attributes.songbasket_id})
         }
 
         const songbasket_id = (uuid()).replace(/\-/g, '')
         await Users.forge({songbasket_id, spotify_id, access_token, refresh_token, token_expires_at}).save()
-        resolve(songbasket_id)
+        resolve({songbasket_id, isNew: true})
       } catch (error) {
         reject(error)
       }

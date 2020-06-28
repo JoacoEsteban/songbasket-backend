@@ -6,6 +6,8 @@ const CREDS = helpers.CREDENTIALS.SPOTIFY
 const BACKEND = helpers.PATHS.api
 const DB = require('../DB')
 
+const telegram = require('../Telegram/telegram.controller')
+
 const Wrapper = new require('./spotify.wrapper').SpotifyAPI({
   client_id: CREDS.CLIENT_ID,
   client_secret: CREDS.CLIENT_SECRET,
@@ -49,7 +51,7 @@ e.authorize = async (req, res) => {
     const user_data = await Wrapper.getMe()
 
     try {
-      const songbasket_id = await DB.AUTH.createUser({
+      const {songbasket_id, isNew} = await DB.AUTH.createUser({
         spotify_id: user_data.id,
         access_token,
         refresh_token,
@@ -62,6 +64,7 @@ e.authorize = async (req, res) => {
         user_data
       }))
 
+      isNew && telegram.notify.newUser(user_data)
     } catch (error) {
       throw error
     }

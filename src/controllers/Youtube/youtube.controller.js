@@ -54,7 +54,7 @@ e.youtubize = async (req, res) => {
 
     console.log('Track not cached, retrieving', track.id)
     const conversion = await Youtubize(track, req)
-    res.json({id: track.id, yt: conversion})
+    res.json({ id: track.id, yt: conversion })
     try {
       if (conversion.length) await DB.addRelations(track.id, conversion.map(c => c.youtube_id))
     } catch (error) {
@@ -77,32 +77,30 @@ e.routeVideoDetails = async (req, res) => {
 }
 
 e.videoDetails = async (ids, req) => {
-  // TODO Forbid multiple matches with "$" at the end of regex
   if (!ids) throw new Error('ID MISSING')
   if (!Array.isArray(ids)) ids = ids.split(',')
   // ------------ CHECK DB ------------
   let reqsLeft = ids.length
   try {
-    await (() => new Promise((resolve, reject) => {
-      const errors = []
-      ids.forEach(async (id, index) => {
-        const idFormatted = helpers.REGEX.youtubeVideoUrl.exec(id)
-        if (!idFormatted && !helpers.REGEX.youtubeVideoId.test(id)) return ids[index] = {
+    const errors = []
+    await Promise.allSettled(ids.map(async (id, index) => {
+      const regexResult = helpers.REGEX.youtubeVideoUrl.exec(id)
+      if (!regexResult) {
+        ids[index] = {
           id,
           error: 'invalid ID'
         }
-        if (idFormatted) id = idFormatted[1]
+        return
+      }
+      if (regexResult) id = regexResult.last
 
-        YT.getById(id)
-          .then(cachedConversion => {
-            if (cachedConversion) ids[index] = cachedConversion
-          })
-          .catch(error => {
-            errors.push(error)
-          })
-          .finally(() => !--reqsLeft && (errors.length ? reject(errors) : resolve()))
-      })
-    }))()
+      try {
+        ids[index] = (await YT.getById(id)) || null
+      } catch (error) {
+        errors.push(error)
+      }
+    }))
+    if (errors.length) throw errors
   } catch (error) {
     console.error('ERROR WHEN ACCESSING DB', error)
     if (global.IS_DEV) throw error
@@ -189,7 +187,7 @@ const getVideoDetails = async ids => {
 
   try {
     const response = await API.get(url, { params })
-    return response && response.data.items.map(({snippet, contentDetails, id}) => ({snippet, youtube_id: id, duration: parseDuration(contentDetails.duration)}))
+    return response && response.data.items.map(({ snippet, contentDetails, id }) => ({ snippet, youtube_id: id, duration: parseDuration(contentDetails.duration) }))
   } catch (error) {
     try {
       if (!defineError(error, params.key)) throw error
@@ -202,44 +200,47 @@ const getVideoDetails = async ids => {
   }
 }
 
-const parseDuration = (PT) => {
-  var durationInSec = 0
-  var matches = PT.match(/P(?:(\d*)Y)?(?:(\d*)M)?(?:(\d*)W)?(?:(\d*)D)?T(?:(\d*)H)?(?:(\d*)M)?(?:(\d*)S)?/i)
-  var parts = [{ // years
-      pos: 1,
-      multiplier: 86400 * 365
-    },
-    { // months
-      pos: 2,
-      multiplier: 86400 * 30
-    },
-    { // weeks
-      pos: 3,
-      multiplier: 604800
-    },
-    { // days
-      pos: 4,
-      multiplier: 86400
-    },
-    { // hours
-      pos: 5,
-      multiplier: 3600
-    },
-    { // minutes
-      pos: 6,
-      multiplier: 60
-    },
-    { // seconds
-      pos: 7,
-      multiplier: 1
-    }
-  ]
+const parseDuration = (() => {
+  const regex = /P(?:(\d*)Y)?(?:(\d*)M)?(?:(\d*)W)?(?:(\d*)D)?T(?:(\d*)H)?(?:(\d*)M)?(?:(\d*)S)?/i
+  const parts = [{ // years
+    pos: 1,
+    multiplier: 86400 * 365
+  },
+  { // months
+    pos: 2,
+    multiplier: 86400 * 30
+  },
+  { // weeks
+    pos: 3,
+    multiplier: 604800
+  },
+  { // days
+    pos: 4,
+    multiplier: 86400
+  },
+  { // hours
+    pos: 5,
+    multiplier: 3600
+  },
+  { // minutes
+    pos: 6,
+    multiplier: 60
+  },
+  { // seconds
+    pos: 7,
+    multiplier: 1
+  }]
 
-  for (var i = 0; i < parts.length; i++) {
-    if (typeof matches[parts[i].pos] != 'undefined') {
-      durationInSec += parseInt(matches[parts[i].pos]) * parts[i].multiplier
+  return PT => {
+    let durationInSec = 0
+    const matches = PT.match(regex)
+
+    for (var i = 0; i < parts.length; i++) {
+      if (typeof matches[parts[i].pos] != 'undefined') {
+        durationInSec += parseInt(matches[parts[i].pos]) * parts[i].multiplier
+      }
     }
+
+    return durationInSec
   }
-
-  return durationInSec
-}
+})()

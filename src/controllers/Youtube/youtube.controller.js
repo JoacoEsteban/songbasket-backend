@@ -113,8 +113,7 @@ e.videoDetails = async (ids, req) => {
     if (toRetrieve.length && req.hasQuota) {
       retrievedTracks = await getVideoDetails(toRetrieve)
       try {
-        // TODO turn into asyncForEach
-        await retrievedTracks.forEach(async track => YT.addReg(track.youtube_id, track.snippet, track.duration, req.user.spotify_id))
+        await Promise.allSettled(retrievedTracks.map(async track => YT.addReg(track.youtube_id, track.snippet, track.duration, req.user.spotify_id)))
       } catch (error) {
         console.error('ERROR WHEN ADDING TRACK TO TO DB', error)
       }

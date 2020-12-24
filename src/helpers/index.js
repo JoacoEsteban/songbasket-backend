@@ -30,7 +30,7 @@ e.EMAILS = {
 
 e.REGEX = {
   youtubeVideoId: /^[a-zA-Z0-9-_]{11}$/,
-  youtubeVideoUrl: /^https:\/\/www.youtube.com.watch\?v=([a-zA-Z0-9-_]{11})$/,
+  youtubeVideoUrl: /^(https?:\/\/(((www\.)?youtube\.com\/watch\/?\?v=)|(youtu\.be\/)))?([a-zA-Z0-9-_]{11})$/,
   spotifyPlaylistId: (txt) => txt.length === 22 && /[a-zA-Z0-9]{22}/.test(txt),
   spotifyUserId: (txt) => /[a-zA-Z0-9\._]+/.test(txt),
   spotifyTrackId: (txt) => /^[\w]{22}$/.test(txt),
@@ -49,15 +49,15 @@ e.CREDENTIALS = {
     REDIRECT_URI,
     SPOTIFY_LOGIN_URL: 'https://accounts.spotify.com/authorize?client_id=' +
       CLIENT_ID
-    + '&response_type=' +
+      + '&response_type=' +
       'code'
-    + '&redirect_uri=' +
+      + '&redirect_uri=' +
       REDIRECT_URI
-    + '&scope=' +
+      + '&scope=' +
       'user-read-private+user-read-email+playlist-read-private'
-    + '&show_dialog=' +
+      + '&show_dialog=' +
       'true'
-    + '&state=' +
+      + '&state=' +
       '*SONGBASKET*'
   },
   YOUTUBE: {
@@ -68,7 +68,7 @@ e.CREDENTIALS = {
 e.SPOTIFY_API_OPTIONS = {
   userPlaylistsLimit: 50,
   rawPlaylistFields: 'followers.total,id,snapshot_id,images,name,owner,public,description,tracks.total',
-  trackFields: 'total,offset,next,' + [ 'is_local', 'items.track('+['id', 'name', 'duration_ms', 'external_urls', 'preview_url', 'artists(name, external_urls, id)', 'album(' + ['id', 'name', 'external_urls', 'images', 'name',].join(',') + ')'].join(',') + ')' ].join(',')
+  trackFields: 'total,offset,next,' + ['is_local', 'items.track(' + ['id', 'name', 'duration_ms', 'external_urls', 'preview_url', 'artists(name, external_urls, id)', 'album(' + ['id', 'name', 'external_urls', 'images', 'name',].join(',') + ')'].join(',') + ')'].join(',')
 }
 
 e.YOUTUBE_API_OPTIONS = {

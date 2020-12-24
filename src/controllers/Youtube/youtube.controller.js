@@ -27,7 +27,7 @@ const API = axios.create({
 const e = module.exports
 
 e.checkQuota = async (req, res, next) => {
-  // TODO Check user requests limit
+  // TODO Implement user requests limit
   req.hasQuota = !!Wrapper.creds.access_token
   next()
 }
@@ -44,7 +44,7 @@ e.youtubize = async (req, res) => {
     if (!helpers.REGEX.spotifyTrackId(track.id)) return handlers.status.c400(res)
     // ------------------
     const localConversion = await DB.getAllFrom(track.id)
-    // TODO check if track needs cache invalidation
+    // TODO Implement track cache invalidation and check
     if (localConversion !== false && localConversion.yt.length) {
       console.log('Track was found in DataBase')
       return res.json(localConversion)
@@ -67,7 +67,6 @@ e.youtubize = async (req, res) => {
 }
 
 e.routeVideoDetails = async (req, res) => {
-  // TODO
   try {
     const details = await e.videoDetails(req.params.ids, req)
     return res.json(details.length === 1 ? details[0] : details)
@@ -127,7 +126,7 @@ e.videoDetails = async (ids, req) => {
   // ------------ END RETRIEVE ------------
 }
 
-const defineError = (error, token) => {
+const errorIsQuotaLimit = (error, token) => {
   console.error(error.code, error.toJSON())
   const code = error && error.response && error.response.status
   if (code === 403) {
@@ -148,10 +147,7 @@ const Youtubize = async (track, req) => {
   }
 }
 
-const runSearch = async ({
-  query,
-  duration
-}) => {
+const runSearch = async ({ query, duration }) => {
   const url = '/search'
   const params = makeParams((() => {
     const params = {
@@ -167,7 +163,7 @@ const runSearch = async ({
     return response && response.data.items.map(i => i.id.videoId)
   } catch (error) {
     try {
-      if (!defineError(error, params.key)) throw error
+      if (!errorIsQuotaLimit(error, params.key)) throw error
       else return await runSearch({
         query,
         duration
@@ -190,7 +186,7 @@ const getVideoDetails = async ids => {
     return response && response.data.items.map(({ snippet, contentDetails, id }) => ({ snippet, youtube_id: id, duration: parseDuration(contentDetails.duration) }))
   } catch (error) {
     try {
-      if (!defineError(error, params.key)) throw error
+      if (!errorIsQuotaLimit(error, params.key)) throw error
       else return await getVideoDetails({
         ids
       }) // token cycled, try again

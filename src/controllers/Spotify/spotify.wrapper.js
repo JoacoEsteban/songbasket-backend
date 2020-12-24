@@ -1,6 +1,7 @@
 const DB = require('../DB')
+// TODO use axios
 const request = require('request')
-const {getDate} = require('../../helpers/handlers')
+const { getDate } = require('../../helpers/handlers')
 
 module.exports = {
   SpotifyAPI: function ({
@@ -105,30 +106,30 @@ module.exports = {
     }
 
     this.getUser = (user_id) => {
-        return new Promise((resolve, reject) => {
-          console.log('Getting user ', user_id)
-          request(`https://api.spotify.com/v1/users/${user_id}`, {
-              headers: {
-                Authorization: 'Bearer ' + this.giveMe.access_token()
-              }
-            },
-            (algo, response) => {
-              response = JSON.parse(response.body)
-              if (response.error !== undefined) {
-                console.log('ERROR WHEN SEARCHING FOR USER: ', response.error)
-                //User Not Found
-                reject({
-                  code: response.error.status,
-                  success: true,
-                  reason: response.error.message,
-                  user_id: user_id,
-                })
-              } else {
-                resolve(response)
-              }
-            })
-        })
-      },
+      return new Promise((resolve, reject) => {
+        console.log('Getting user ', user_id)
+        request(`https://api.spotify.com/v1/users/${user_id}`, {
+          headers: {
+            Authorization: 'Bearer ' + this.giveMe.access_token()
+          }
+        },
+          (algo, response) => {
+            response = JSON.parse(response.body)
+            if (response.error !== undefined) {
+              console.log('ERROR WHEN SEARCHING FOR USER: ', response.error)
+              //User Not Found
+              reject({
+                code: response.error.status,
+                success: true,
+                reason: response.error.message,
+                user_id: user_id,
+              })
+            } else {
+              resolve(response)
+            }
+          })
+      })
+    },
 
 
 

@@ -1,7 +1,7 @@
 const axios = require('axios')
 const request = require('request')
 
-const {getDate} = require('../../helpers/handlers')
+const { getDate } = require('../../helpers/handlers')
 
 module.exports = {
   YouTubeAPI: function ({ access_tokens }) {
@@ -28,7 +28,7 @@ module.exports = {
     // Checks the next token exists and sets it
     const getNextTokenIndex = () => {
       const now = new Date()
-      let index = this.access_tokens.list.indexOfSearch(tok => tok.availableAt < now)
+      let index = this.access_tokens.list.findIndex(tok => tok.availableAt < now)
       return index
     }
 
@@ -46,9 +46,9 @@ module.exports = {
 
       const date = new Date()
       date.setDate(date.getDate() + 1)
-      
+
       token.availableAt = date
-      
+
       this.access_tokens.index = null
       return this.cycleAccessToken()
     }

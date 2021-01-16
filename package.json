@@ -2,9 +2,6 @@
   "name": "songbasket-backend",
   "version": "0.3.0",
   "description": "Backend for SongBasket",
-  "engines": {
-    "node": "12.x"
-  },
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -21,7 +18,7 @@
     "express": "^4.15.2",
     "knex": "^0.21.1",
     "nodemon": "^1.19.4",
-    "pg": "^7.12.1",
+    "pg": "^8.5.1",
     "request": "^2.81.0",
     "serverless-http": "^2.3.2",
     "slimbot": "^4.8.0",

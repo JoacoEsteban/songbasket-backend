@@ -1,3 +1,3 @@
-module.exporst = global.FEAURES = {
+module.exporst = global.FEATURES = {
     BETA_AUTH: false
 }

@@ -103,7 +103,7 @@ e.videoDetails = async (ids, req) => {
     if (errors.length) throw errors
   } catch (error) {
     console.error('ERROR WHEN ACCESSING DB', error)
-    if (global.IS_DEV) throw error
+    if (global.CONSTANTS.ENV_DEV) throw error
   }
   // ------------ END CHECK DB ------------
 

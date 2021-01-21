@@ -1,6 +1,6 @@
 const uuid = require('uuid').v4
 
-const config = global.CONSTANTS.PRODUCTION || global.CONSTANTS.PRODUCTION_DB ? {
+const config = global.CONSTANTS.ENV_PROD || global.CONSTANTS.PRODUCTION_DB ? {
   client: 'postgres',
   connection: {
     host: global.CONSTANTS.DATABASE_URL,

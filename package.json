@@ -4,7 +4,8 @@
   "description": "Backend for SongBasket",
   "main": "src/index.js",
   "scripts": {
-    "start": "nodemon src/index.js"
+    "start": "nodemon src/index.js",
+    "dev": "npm run start"
   },
   "dependencies": {
     "@google-cloud/firestore": "^2.2.4",

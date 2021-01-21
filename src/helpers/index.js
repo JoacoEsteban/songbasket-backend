@@ -1,6 +1,7 @@
 const e = module.exports
 
-const PROD = e.ENV_PROD = global.CONSTANTS.PRODUCTION
+const PROD = e.ENV_PROD = global.CONSTANTS.ENV_PROD
+const DEV = e.ENV_DEV = global.CONSTANTS.ENV_DEV
 
 
 const baseSP = 'https://api.spotify.com/v1/'

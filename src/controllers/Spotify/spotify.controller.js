@@ -51,7 +51,7 @@ e.authorize = async (req, res) => {
     const user_data = await Wrapper.getMe()
 
     try {
-      const {songbasket_id, isNew} = await DB.AUTH.createUser({
+      const { songbasket_id, isNew } = await DB.AUTH.createUser({
         spotify_id: user_data.id,
         access_token,
         refresh_token,
@@ -64,7 +64,8 @@ e.authorize = async (req, res) => {
         user_data
       }))
 
-      isNew && telegram.notify.newUser(user_data)
+      if (isNew) telegram.notify.userRegistered(user_data)
+      else telegram.notify.userLogin(user_data)
     } catch (error) {
       throw error
     }
@@ -189,7 +190,7 @@ e.getPlaylist = async (req, res) => {
           params
         })
         checkErrors(response)
-        
+
         playlistObject.tracks.items.push(...response.data.items.map(i => i.track))
         if (response.data.next) await accumulateTracks(response.data.next)
       } catch (error) {

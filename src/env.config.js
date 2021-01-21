@@ -11,10 +11,9 @@ global.CONSTANTS = process.env.PRODUCTION ? (() => ({
     PRODUCTION: true,
     PRODUCTION_DB: true,
 }))() : require('dotenv-flow').config().parsed
-global.CONSTANTS.PRODUCTION = utils.parseBool(process.env.PRODUCTION)
+global.CONSTANTS.ENV_PROD = utils.parseBool(process.env.PRODUCTION)
 global.CONSTANTS.PRODUCTION_DB = utils.parseBool(process.env.PRODUCTION_DB)
-
-global.CONSTANTS.BETA_ENABLED = true
+global.CONSTANTS.ENV_DEV = !global.CONSTANTS.ENV_PROD
 
 global.CASE = require('change-case')
 global.CASE.kebabCase = global.CASE.paramCase

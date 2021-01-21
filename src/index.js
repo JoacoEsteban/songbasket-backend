@@ -1,6 +1,5 @@
 require('./env.config.js')
 require('./controllers/Prototypes')
-global.IS_DEV = !global.CONSTANTS.PRODUCTION
 global.log = (...aa) => aa.forEach(a => console.log(require('util').inspect(a, { showHidden: false, depth: null })))
 
 

@@ -21,6 +21,13 @@ package-lock.json
 node_modules
 jspm_packages
 
-.yarn
 # Serverless directories
 .serverless
+
+# yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

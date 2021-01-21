@@ -45,8 +45,9 @@ const ctr = {
     if (!Array.isArray(chats)) chats = [chats]
     chats.forEach(id => ctr.sendMessage(text, id))
   },
-  sendMessage (text, chat) {
-    slimbot.sendMessage(chat, text, { parse_mode: 'MarkdownV2' })
+  sendMessage (text, chat, markdown = false) {
+    const optionalParams = markdown && { parse_mode: 'MarkdownV2' }
+    slimbot.sendMessage(chat, text, optionalParams)
   },
   defineAction ({ text }) {
     text = text.toLowerCase()

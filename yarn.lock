@@ -1767,7 +1767,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.15.2":
+"express@npm:^4.17.1":
   version: 4.17.1
   resolution: "express@npm:4.17.1"
   dependencies:
@@ -2132,11 +2132,10 @@ fsevents@^1.2.7:
 
 "fsevents@patch:fsevents@^1.2.7#builtin<compat/fsevents>":
   version: 1.2.13
-  resolution: "fsevents@patch:fsevents@npm%3A1.2.13#builtin<compat/fsevents>::version=1.2.13&hash=87eb42"
+  resolution: "fsevents@patch:fsevents@npm%3A1.2.13#builtin<compat/fsevents>::version=1.2.13&hash=11e9ea"
   dependencies:
     bindings: ^1.5.0
     nan: ^2.12.1
-  checksum: 31c62373556f061f4b4c52ff61c91bc9080243ea074a38a81cf12c1f2c9098da731ea3d39705c805b738427e4284af6b8151efe65ce9ca6b11378d43f36db2c4
   languageName: node
   linkType: hard
 
@@ -5104,7 +5103,7 @@ resolve@~1.17.0:
     eslint: ^6.2.2
     eslint-config-airbnb-base: ^14.0.0
     eslint-plugin-import: ^2.18.2
-    express: ^4.15.2
+    express: ^4.17.1
     knex: ^0.21.1
     nodemon: ^1.19.4
     pg: ^8.5.1

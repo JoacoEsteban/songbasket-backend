@@ -94,7 +94,8 @@ e.videoDetails = async (ids, req) => {
       if (regexResult) id = regexResult.last
 
       try {
-        ids[index] = (await YT.getById(id)) || null
+        const conversion = (await YT.getById(id))
+        if (conversion) ids[index] = conversion
       } catch (error) {
         errors.push(error)
       }

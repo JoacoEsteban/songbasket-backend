@@ -1,5 +1,5 @@
 const TOKEN = global.CONSTANTS.TELEGRAM_BOT_TOKEN
-const ENABLED = !!TOKEN
+const ENABLED = !!TOKEN && global.FEATURES.TELEGRAM_BOT
 const USER_IDS = (global.CONSTANTS.TELEGRAM_USER_IDS || '').split(',').map(parseInt)
 const ADMIN_ID = USER_IDS[0]
 

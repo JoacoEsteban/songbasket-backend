@@ -1,3 +1,4 @@
 module.exporst = global.FEATURES = {
-    BETA_AUTH: false
+    BETA_AUTH: false,
+    TELEGRAM_BOT: true
 }

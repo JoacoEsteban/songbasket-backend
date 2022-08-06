@@ -61,7 +61,7 @@ e.youtubize = async (req, res) => {
       // console.error(error)
     }
   } catch (error) {
-    console.error('ERROR WHEN YOUTUBIZING @index.js', error.toJSON())
+    console.error('ERROR WHEN YOUTUBIZING @index.js', error)
     handlers.status.c500(res, error)
   }
 }
